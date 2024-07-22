@@ -1,6 +1,6 @@
 # chroma-db
 
-This repository includes a Go project for working with Chroma DB and embedding models. It can set up and run a vector database using Chroma DB, handle user queries, and interact with an embedding model. It also includes a Dockerfile for running the project locally and a docker compose file to run the project in a container.
+This repository includes a Go project for working with Chroma DB and ollama embedding models. It can set up and run a vector database using Chroma DB, handle user queries, and interact with an embedding model. It also includes a Dockerfile for running the project locally and a docker compose file to run the project in a container.
 ## Getting Started
 
 ### Prerequisites
