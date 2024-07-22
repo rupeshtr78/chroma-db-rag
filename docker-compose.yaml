@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    volumes:
+      - ./chromadb:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=TRUE
+    ports:
+      - 8070:8000
