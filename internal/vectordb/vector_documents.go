@@ -23,7 +23,6 @@ func AddDocuments(ctx context.Context,
 	vecOptions := make([]vectorstores.Option, 3)
 	vecOptions = append(vecOptions, vectorstores.WithEmbedder(embedder))
 	vecOptions = append(vecOptions, vectorstores.WithNameSpace(nameSpace))
-	vecOptions = append(vecOptions, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
 	// vecOptions = append(vecOptions, vectorstores.WithDeduplicater(fn func(ctx context.Context, doc schema.Document) bool)
 
 	// 	// Add documents to the vector store. returns the ids of the added documents.
@@ -52,8 +51,7 @@ func SearchVectorDb(ctx context.Context,
 	namespace string) ([]schema.Document, error) {
 
 	vecOpts := make([]vectorstores.Option, 5)
-	nsOption := vectorstores.WithNameSpace(namespace)
-	vecOpts = append(vecOpts, nsOption)
+	vecOpts = append(vecOpts, vectorstores.WithNameSpace(namespace))
 	vecOpts = append(vecOpts, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
 	// vecOpts = append(vecOpts, vectorstores.WithDeduplicater()))
 
@@ -89,4 +87,17 @@ func DeleteCollection(ctx context.Context,
 
 	return nil
 
+}
+
+// func(ctx context.Context, doc schema.Document) bool
+
+func dupplicateChecker(ctx context.Context, doc schema.Document) bool {
+	// TODO - Implement the deduplicater function
+	// Implement deduplication logic here
+	// check if a document with the same ID already exists in the store
+	// existingDocs, err := store.GetDocuments(ctx, []string{doc.ID})
+	// if err != nil || len(existingDocs) > 0 {
+	// 	return true
+	// }
+	return false
 }
