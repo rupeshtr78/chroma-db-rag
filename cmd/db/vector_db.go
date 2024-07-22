@@ -90,7 +90,7 @@ func RunVectorDb(ctx context.Context) {
 
 	vecAddOptions := []vectorstores.Option{
 		vectorstores.WithNameSpace(constants.Namespace),
-		vectorstores.WithEmbedder(ollamaEmbedFn),
+		// vectorstores.WithEmbedder(ollamaEmbedFn), // error: unsupported options
 		// vectorstores.WithScoreThreshold(constants.ScoreThreshold),
 	}
 
