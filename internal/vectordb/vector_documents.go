@@ -19,10 +19,11 @@ func AddDocuments(ctx context.Context,
 	nameSpace string,
 	embedder embeddings.Embedder) error {
 
+	// TODO - Refector this to use the vectorstores.Option
 	vecOptions := make([]vectorstores.Option, 3)
 	vecOptions = append(vecOptions, vectorstores.WithEmbedder(embedder))
 	vecOptions = append(vecOptions, vectorstores.WithNameSpace(nameSpace))
-	// vecOptions = append(vecOptions, vectorstores.WithScoreThreshold(0.0)),
+	vecOptions = append(vecOptions, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
 	// vecOptions = append(vecOptions, vectorstores.WithDeduplicater(fn func(ctx context.Context, doc schema.Document) bool)
 
 	// 	// Add documents to the vector store. returns the ids of the added documents.
@@ -54,7 +55,7 @@ func SearchVectorDb(ctx context.Context,
 	nsOption := vectorstores.WithNameSpace(namespace)
 	vecOpts = append(vecOpts, nsOption)
 	vecOpts = append(vecOpts, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
-	// vecOpts = append(vecOpts, vectorstores.WithDeduplicater(constants.Deduplicater))
+	// vecOpts = append(vecOpts, vectorstores.WithDeduplicater()))
 
 	// 	// Search for similar documents in the vector store.
 	// 	// returns the most similar documents to the query.
