@@ -1,6 +1,7 @@
 package vectordb
 
 import (
+	"chroma-db/internal/constants"
 	"context"
 	"errors"
 	"log"
@@ -49,11 +50,18 @@ func SearchVectorDb(ctx context.Context,
 	numDocuments int,
 	namespace string) ([]schema.Document, error) {
 
+	vecOpts := make([]vectorstores.Option, 5)
 	nsOption := vectorstores.WithNameSpace(namespace)
+	vecOpts = append(vecOpts, nsOption)
+	vecOpts = append(vecOpts, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
+	// vecOpts = append(vecOpts, vectorstores.WithDeduplicater(constants.Deduplicater))
 
 	// 	// Search for similar documents in the vector store.
 	// 	// returns the most similar documents to the query.
-	similarDocs, errSs := store.SimilaritySearch(ctx, query, numDocuments, nsOption)
+	similarDocs, errSs := store.SimilaritySearch(ctx,
+		query,
+		numDocuments,
+		vecOpts...)
 	if errSs != nil {
 		log.Default().Printf("similarity search: %v\n", errSs)
 		return nil, errSs
