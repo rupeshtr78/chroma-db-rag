@@ -1,7 +1,6 @@
 package vectordb
 
 import (
-	"chroma-db/internal/constants"
 	"context"
 	"errors"
 	"log"
@@ -48,11 +47,12 @@ func SearchVectorDb(ctx context.Context,
 	store *chroma.Store,
 	query string,
 	numDocuments int,
-	namespace string) ([]schema.Document, error) {
+	namespace string,
+	options ...vectorstores.Option) ([]schema.Document, error) {
 
-	vecOpts := make([]vectorstores.Option, 5)
-	vecOpts = append(vecOpts, vectorstores.WithNameSpace(namespace))
-	vecOpts = append(vecOpts, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
+	// vecOpts := make([]vectorstores.Option, 2)
+	// vecOpts = append(vecOpts, vectorstores.WithNameSpace(namespace))
+	// vecOpts = append(vecOpts, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
 	// vecOpts = append(vecOpts, vectorstores.WithDeduplicater()))
 
 	// 	// Search for similar documents in the vector store.
@@ -60,7 +60,7 @@ func SearchVectorDb(ctx context.Context,
 	similarDocs, errSs := store.SimilaritySearch(ctx,
 		query,
 		numDocuments,
-		vecOpts...)
+		options...)
 	if errSs != nil {
 		log.Default().Printf("similarity search: %v\n", errSs)
 		return nil, errSs
@@ -91,13 +91,13 @@ func DeleteCollection(ctx context.Context,
 
 // func(ctx context.Context, doc schema.Document) bool
 
-func dupplicateChecker(ctx context.Context, doc schema.Document) bool {
-	// TODO - Implement the deduplicater function
-	// Implement deduplication logic here
-	// check if a document with the same ID already exists in the store
-	// existingDocs, err := store.GetDocuments(ctx, []string{doc.ID})
-	// if err != nil || len(existingDocs) > 0 {
-	// 	return true
-	// }
-	return false
-}
+// func dupplicateChecker(ctx context.Context, doc schema.Document) bool {
+// 	// TODO - Implement the deduplicater function
+// 	// Implement deduplication logic here
+// 	// check if a document with the same ID already exists in the store
+// 	// existingDocs, err := store.GetDocuments(ctx, []string{doc.ID})
+// 	// if err != nil || len(existingDocs) > 0 {
+// 	// 	return true
+// 	// }
+// 	return false
+// }
