@@ -8,24 +8,25 @@ import (
 	"chroma-db/internal/vectordb"
 	"context"
 	"log"
+	"strings"
 
 	"github.com/amikos-tech/chroma-go/types"
 	"github.com/tmc/langchaingo/vectorstores"
 )
 
-func RunVectorDb(ctx context.Context) {
+func RunVectorDb(ctx context.Context, queryString string) (string, error) {
 	// Get the chroma client
 	client, err := chromaclient.GetChromaClient(ctx, constants.ChromaUrl)
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	// Get or create the tenant
 	t, err := chromaclient.GetOrCreateTenant(ctx, client, constants.TenantName)
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	client.SetTenant(*t.Name)
@@ -34,16 +35,16 @@ func RunVectorDb(ctx context.Context) {
 	d, err := chromaclient.GetOrCreateDatabase(ctx, client, constants.Database, t.Name)
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	client.SetDatabase(*d.Name)
 
 	// Get the ollama embedding function
-	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbedding(constants.OllamaUrl, constants.OllamaModel)
+	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbedding(constants.OllamaUrl, constants.OllamaEmbdedModel)
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	// Create a new store
@@ -54,7 +55,7 @@ func RunVectorDb(ctx context.Context) {
 		types.DistanceFunction(constants.DistanceFn))
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	// err4 := store.RemoveCollection()
@@ -67,6 +68,7 @@ func RunVectorDb(ctx context.Context) {
 	collections, err2 := client.ListCollections(ctx)
 	if err2 != nil {
 		log.Default().Println(err2)
+		return "", err
 	}
 
 	// Print the list of databases
@@ -81,7 +83,7 @@ func RunVectorDb(ctx context.Context) {
 	pdfDocs, err := documents.PdfToDocument(ctx, "text/Model Params.pdf")
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	// vecOpts := make([]vectorstores.Option, 5)
@@ -98,7 +100,7 @@ func RunVectorDb(ctx context.Context) {
 	s, err3 := store.AddDocuments(ctx, pdfDocs, vecAddOptions...)
 	if err3 != nil {
 		log.Default().Println(err3)
-		return
+		return "", err
 	}
 	log.Default().Printf("Added %v documents\n", len(s))
 
@@ -107,7 +109,7 @@ func RunVectorDb(ctx context.Context) {
 		vectorstores.WithScoreThreshold(constants.ScoreThreshold),
 	}
 	// // Search the store
-	queryString := "what is mirostat_tau?"
+	// queryString := "what is mirostat_tau?"
 	docs, err := vectordb.SearchVectorDb(ctx,
 		store,
 		queryString,
@@ -117,14 +119,21 @@ func RunVectorDb(ctx context.Context) {
 
 	if err != nil {
 		log.Default().Println(err)
-		return
+		return "", err
 	}
 
 	log.Default().Printf("Found %v documents\n", len(docs))
+
+	var results strings.Builder
 	for _, doc := range docs {
 		log.Default().Printf("Document: %v\n", doc.PageContent)
 		log.Default().Printf("Metadata: %v\n", doc.Metadata)
 		log.Default().Printf("Score: %v\n", doc.Score)
 
+		results.WriteString(doc.PageContent)
+
 	}
+
+	return results.String(), nil
+
 }
