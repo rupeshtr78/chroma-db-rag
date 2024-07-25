@@ -1,7 +1,7 @@
 package main
 
 import (
-	"chroma-db/cmd/db"
+	"chroma-db/internal/gitquery"
 	"context"
 )
 
@@ -11,7 +11,9 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	db.RunVectorDb(ctx)
+	// db.RunVectorDb(ctx)
 
 	// chat.ChatOllama(ctx)
+	gitquery.GitCodeQuery()
+
 }
