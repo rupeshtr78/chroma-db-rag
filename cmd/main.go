@@ -1,9 +1,12 @@
 package main
 
 import (
+	"chroma-db/cmd/chat"
+	"chroma-db/cmd/db"
 	"chroma-db/internal/prompts"
 	"chroma-db/pkg/logger"
 	"context"
+	"os"
 )
 
 var log = logger.Log
@@ -15,18 +18,19 @@ func main() {
 	defer cancel()
 
 	queryString := "what is mirostat_eta"
-	// vectorResults, err := db.RunVectorDb(ctx, queryString)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
+	vectorResults, err := db.RunVectorDb(ctx, queryString)
+	if err != nil {
+		log.Error().Msgf("Failed to run vector db: %v", err)
+		os.Exit(1)
+	}
 
-	// _ = vectorResults
+	_ = vectorResults
 	// chat.ChatOllama(ctx)
 	// gitquery.GitCodeQuery()
 
-	vectorResults := `mirostat_tau Controls the balance between coherence and diversity of the output.
+	// vectorResults := `mirostat_tau Controls the balance between coherence and diversity of the output.
 	// A lower value will result in more focused and coherent text. (Default: 5.0)`
+
 	s, err := prompts.GetTemplate(queryString, vectorResults)
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
@@ -35,5 +39,5 @@ func main() {
 
 	log.Info().Msgf("Final Prompt: %s", s)
 
-	// chat.ChatOllama(ctx, s)
+	chat.ChatOllama(ctx, s)
 }
