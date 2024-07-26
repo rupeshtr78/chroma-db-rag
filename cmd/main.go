@@ -17,10 +17,10 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	queryString := "what is mirostat_eta"
-	vectorResults, err := db.RunVectorDb(ctx, queryString)
+	queryString := "what is repeat_penalty"
+	vectorResults, err := db.QueryVectorDatabase(ctx, queryString)
 	if err != nil {
-		log.Error().Msgf("Failed to run vector db: %v", err)
+		log.Error().Msgf("Failed to fetch results from vector db: %v", err)
 		os.Exit(1)
 	}
 
