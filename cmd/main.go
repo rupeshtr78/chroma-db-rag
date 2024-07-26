@@ -1,13 +1,12 @@
 package main
 
 import (
-	"chroma-db/cmd/chat"
-	"chroma-db/cmd/db"
 	"chroma-db/internal/prompts"
+	"chroma-db/pkg/logger"
 	"context"
-	"fmt"
-	"os"
 )
+
+var log = logger.Log
 
 func main() {
 	ctx := context.Background()
@@ -16,24 +15,25 @@ func main() {
 	defer cancel()
 
 	queryString := "what is mirostat_eta"
-	vectorResults, err := db.RunVectorDb(ctx, queryString)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	// vectorResults, err := db.RunVectorDb(ctx, queryString)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
 
-	_ = vectorResults
+	// _ = vectorResults
 	// chat.ChatOllama(ctx)
 	// gitquery.GitCodeQuery()
 
-	// content := `mirostat_tau Controls the balance between coherence and diversity of the output.
-	// // A lower value will result in more focused and coherent text. (Default: 5.0)`
+	vectorResults := `mirostat_tau Controls the balance between coherence and diversity of the output.
+	// A lower value will result in more focused and coherent text. (Default: 5.0)`
 	s, err := prompts.GetTemplate(queryString, vectorResults)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Msgf("Failed to get template: %v", err)
+
 	}
 
-	fmt.Println(s)
+	log.Info().Msgf("Final Prompt: %s", s)
 
-	chat.ChatOllama(ctx, s)
+	// chat.ChatOllama(ctx, s)
 }

@@ -1,3 +1,3 @@
-<|system|> You are an AI assistant. In the content You will be given query results from a vector database. Respond to user queries based solely on these content. If the answer is not found in the provided contents, state "The query is not related to the provided content." If answer is found in content then add additional usefull information. </s>
+<|system|> {{ .SystemPrompt }}</s>
 <|content|> {{ .Content }}</s>
 <|user|> {{ .Prompt }}</s>

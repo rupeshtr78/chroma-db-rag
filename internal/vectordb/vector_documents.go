@@ -1,15 +1,17 @@
 package vectordb
 
 import (
+	"chroma-db/pkg/logger"
 	"context"
 	"errors"
-	"log"
 
 	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/schema"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/chroma"
 )
+
+var log = logger.Log
 
 // Add documents to the vector store.
 func AddDocuments(ctx context.Context,
@@ -30,11 +32,11 @@ func AddDocuments(ctx context.Context,
 		vecOptions...,
 	)
 	if errAd != nil {
-		log.Default().Printf("add documents: %v\n", errAd)
+		log.Debug().Msgf("error adding documents: %v\n", errAd)
 		return chroma.ErrAddDocument
 	}
 	if len(docIds) != len(documents) {
-		log.Default().Printf("add documents: expected %d ids, got %d\n", len(documents), len(docIds))
+		log.Debug().Msgf("add documents: expected %d ids, got %d\n", len(documents), len(docIds))
 		return chroma.ErrAddDocument
 	}
 
@@ -50,11 +52,6 @@ func SearchVectorDb(ctx context.Context,
 	namespace string,
 	options ...vectorstores.Option) ([]schema.Document, error) {
 
-	// vecOpts := make([]vectorstores.Option, 2)
-	// vecOpts = append(vecOpts, vectorstores.WithNameSpace(namespace))
-	// vecOpts = append(vecOpts, vectorstores.WithScoreThreshold(constants.ScoreThreshold))
-	// vecOpts = append(vecOpts, vectorstores.WithDeduplicater()))
-
 	// 	// Search for similar documents in the vector store.
 	// 	// returns the most similar documents to the query.
 	similarDocs, errSs := store.SimilaritySearch(ctx,
@@ -62,11 +59,11 @@ func SearchVectorDb(ctx context.Context,
 		numDocuments,
 		options...)
 	if errSs != nil {
-		log.Default().Printf("similarity search: %v\n", errSs)
+		log.Debug().Msgf("similarity search: %v\n", errSs)
 		return nil, errSs
 	}
 	if len(similarDocs) == 0 {
-		log.Default().Printf("similarity search: no similar documents found\n")
+		log.Debug().Msgf("similarity search: no similar documents found\n")
 		return nil, errors.New("no similar documents found")
 	}
 
@@ -81,7 +78,7 @@ func DeleteCollection(ctx context.Context,
 	// Delete collection and all documents in the vector store.
 	errDc := store.RemoveCollection()
 	if errDc != nil {
-		log.Default().Printf("delete collection: %v\n", errDc)
+		log.Debug().Msgf("err delete collection: %v\n", errDc)
 		return errors.New("delete collection failed")
 	}
 

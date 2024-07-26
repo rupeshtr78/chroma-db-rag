@@ -11,4 +11,5 @@ var (
 	OllamaUrl         string  = "http://0.0.0.0:11434"
 	DistanceFn        string  = "cosine"
 	TemplateFile      string  = "internal/prompts/prompt_template.tmpl"
+	LogLevel          string  = "debug"
 )

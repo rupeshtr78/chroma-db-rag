@@ -3,23 +3,23 @@ package chat
 import (
 	"chroma-db/internal/constants"
 	ollamamodel "chroma-db/internal/ollama"
+	"chroma-db/pkg/logger"
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/tmc/langchaingo/llms"
 )
 
+var log = logger.Log
+
 func ChatOllama(ctx context.Context, prompt string) {
 
-	l, err3 := ollamamodel.GetOllamaModel(constants.OllamaUrl, constants.OllamaChatModel)
-	if err3 != nil {
-		log.Default().Println(err3)
+	l, err := ollamamodel.GetOllamaModel(constants.OllamaUrl, constants.OllamaChatModel)
+	if err != nil {
+		log.Err(err).Msg("Failed to get Ollama model")
 	}
 
-	// prompt := "Why is Sky Blue?"
-
-	_, err4 := l.Call(ctx, prompt,
+	_, err = l.Call(ctx, prompt,
 		llms.WithMaxTokens(1024),
 		llms.WithStreamingFunc(handleStreamingFunc),
 		llms.WithSeed(42),
@@ -28,8 +28,8 @@ func ChatOllama(ctx context.Context, prompt string) {
 
 		// llms.WithTopK(40),
 	)
-	if err4 != nil {
-		log.Default().Println(err4)
+	if err != nil {
+		log.Err(err).Msg("Failed to call Ollama model")
 	}
 	// log.Default().Println(s)
 }

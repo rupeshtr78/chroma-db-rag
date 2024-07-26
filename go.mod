@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/amikos-tech/chroma-go v0.1.3
+	github.com/rs/zerolog v1.31.0
 	github.com/tmc/langchaingo v0.1.12
 )
 
@@ -20,6 +21,8 @@ require (
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pkoukk/tiktoken-go v0.1.6 // indirect
@@ -30,6 +33,7 @@ require (
 	gitlab.com/golang-commonmark/puny v0.0.0-20191124015043-9f83538fa04f // indirect
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
