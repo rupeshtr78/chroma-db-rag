@@ -11,10 +11,10 @@ var log = logger.Log
 func main() {
 	ctx := context.Background()
 	// ctx, cancel := context.WithTimeout(ctx, time.Second*120)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	// ctx, cancel := context.WithCancel(ctx)
+	// defer cancel()
 
-	_, err := db.LoadDataToVectorDB(ctx, "test/Model Params.pdf")
+	err := db.LoadDataToVectorDB(ctx, "test/Model Params.pdf")
 	if err != nil {
 		log.Error().Msgf("Failed to load data to vector db: %v", err)
 	}

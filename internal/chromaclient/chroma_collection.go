@@ -15,15 +15,6 @@ func GetOrCreateCollection(ctx context.Context,
 	embeddingFunction types.EmbeddingFunction,
 	distanceFn types.DistanceFunction) (*chromago.Collection, error) {
 
-	// var newCollection *chromago.Collection
-	// Check if the collection already exists
-	// if c, err := client.GetCollection(ctx,
-	// 	collectionName,
-	// 	embeddingFunction); err == nil {
-	// 	log.Debug().Msgf("Collection %v already exists\n", collectionName)
-	// 	newCollection = c
-	// 	return newCollection, nil
-	// }
 	// Create a new collection with options
 	newCollection, err := client.NewCollection(
 		ctx,
@@ -31,6 +22,8 @@ func GetOrCreateCollection(ctx context.Context,
 		collection.WithCreateIfNotExist(true),
 		collection.WithEmbeddingFunction(embeddingFunction),
 		collection.WithHNSWDistanceFunction(distanceFn),
+		collection.WithTenant(client.Tenant),
+		collection.WithDatabase(client.Database),
 	)
 	if err != nil {
 		log.Err(err).Msg("error creating collection")
@@ -43,19 +36,25 @@ func GetOrCreateCollection(ctx context.Context,
 
 }
 
-func DeleteCollection(ctx context.Context, collectionName string, client *chromago.Client) error {
-	// Check if the collection already exists
-	_, err := client.GetCollection(ctx, collectionName, nil)
+func DeleteCollectionIfExists(ctx context.Context, collectionName string, client *chromago.Client, embeddingFunction types.EmbeddingFunction) error {
+
+	// List all collections Check if the collection already exist
+	collections, err := client.ListCollections(ctx)
 	if err != nil {
-		log.Err(err).Msgf("Error getting collection: %s \n", collectionName)
+		log.Debug().Msgf("Error listing collections: %v\n", err)
 		return err
+	}
+	for _, c := range collections {
+		if c.Name == collectionName {
+			// Collection already exists, Delete the collection
+			collection, err := client.DeleteCollection(ctx, collectionName)
+			if err != nil {
+				log.Err(err).Msgf("Error deleting collection: %s \n", collectionName)
+				return err
+			}
+			log.Debug().Msgf("Collection %v deleted\n", collection.Name)
+		}
 	}
 
-	// Collection already exists, Delete the collection
-	_, err = client.DeleteCollection(ctx, collectionName)
-	if err != nil {
-		log.Err(err).Msgf("Error deleting collection: %s \n", collectionName)
-		return err
-	}
 	return nil
 }
