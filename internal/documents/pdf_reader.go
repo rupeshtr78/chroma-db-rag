@@ -39,9 +39,6 @@ func ParsePDF(path string) ([]string, Metadata, error) {
 
 	for i := 0; i < numPages; i++ {
 		page := pdfReader.Page(i + 1)
-		if err != nil {
-			return nil, nil, err
-		}
 
 		text, err := page.GetPlainText(nil)
 		if err != nil {
