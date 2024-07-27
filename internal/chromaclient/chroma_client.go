@@ -11,6 +11,8 @@ import (
 	"github.com/tmc/langchaingo/vectorstores/chroma"
 )
 
+type Metadata map[string]interface{}
+
 var log = logger.Log
 
 // GetChromaClient creates a new **chromago.Client** and confirms that it can access the server
@@ -28,7 +30,7 @@ func GetChromaClient(ctx context.Context, url string) (*chromago.Client, error) 
 	return chromaClient, err
 }
 
-// CreateChromaStore creates a new **chroma.Store** with the given parameters
+// CreateChromaStore creates a new langchain **chroma.Store** with the given parameters
 func CreateChromaStore(ctx context.Context,
 	chromaUrl string,
 	nameSpace string,
@@ -78,31 +80,4 @@ func GetOrCreateDatabase(ctx context.Context, client *chromago.Client, dbName st
 		return nil, err
 	}
 	return d, nil
-}
-
-// GetOrCreateCollection creates a new **chromago.Collection** if it does not exist
-func GetOrCreateCollection(ctx context.Context,
-	client *chromago.Client,
-	collectionName string,
-	embeddingFunction types.EmbeddingFunction,
-	distanceFn types.DistanceFunction) (*chromago.Collection, error) {
-
-	if c, err := client.GetCollection(ctx,
-		collectionName,
-		embeddingFunction); err == nil {
-		log.Debug().Msgf("Collection %v already exists\n", collectionName)
-		return c, nil
-	}
-
-	c, err := client.CreateCollection(ctx,
-		collectionName,
-		nil,
-		true,
-		embeddingFunction,
-		distanceFn)
-	if err != nil {
-		log.Err(err).Msgf("Failed to create collection %v\n", collectionName)
-		return nil, err
-	}
-	return c, nil
 }

@@ -79,7 +79,7 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 	}
 
 	// // get the documents from the pdf
-	pdfDocs, err := documents.PdfToDocument(ctx, "text/Model Params.pdf")
+	pdfDocs, err := documents.PdfToDocument(ctx, "test/Model Params.pdf")
 	if err != nil {
 		log.Debug().Msgf("Error getting pdf documents: %v\n", err)
 		return "", err
