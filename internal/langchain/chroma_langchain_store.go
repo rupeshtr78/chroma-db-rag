@@ -1,4 +1,4 @@
-package chromaclient
+package langchain
 
 import (
 	"context"

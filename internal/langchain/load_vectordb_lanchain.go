@@ -1,20 +1,16 @@
-package db
+package langchain
 
 import (
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
-	"chroma-db/internal/documents"
 	ollamamodel "chroma-db/internal/ollama"
-	"chroma-db/internal/vectordb"
-	"chroma-db/pkg/logger"
 	"context"
 	"strings"
 
 	"github.com/amikos-tech/chroma-go/types"
+	"github.com/rs/zerolog/log"
 	"github.com/tmc/langchaingo/vectorstores"
 )
-
-var log = logger.Log
 
 func QueryVectorDatabase(ctx context.Context, queryString string) (string, error) {
 	// Get the chroma client
@@ -52,7 +48,7 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 	}
 
 	// Create a new store
-	store, err := chromaclient.CreateChromaStore(ctx,
+	store, err := CreateChromaStore(ctx,
 		constants.ChromaUrl,
 		constants.Namespace,
 		ollamaEmbedFn,
@@ -79,7 +75,7 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 	}
 
 	// // get the documents from the pdf
-	pdfDocs, err := documents.PdfToDocument(ctx, "test/Model Params.pdf")
+	pdfDocs, err := PdfToDocument(ctx, "test/Model Params.pdf")
 	if err != nil {
 		log.Debug().Msgf("Error getting pdf documents: %v\n", err)
 		return "", err
@@ -111,7 +107,7 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 
 	// // Search the store
 	// queryString := "what is mirostat_tau?"
-	docs, err := vectordb.SearchVectorDb(ctx,
+	docs, err := SearchVectorDb(ctx,
 		store,
 		queryString,
 		3,
@@ -138,3 +134,17 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 	return results.String(), nil
 
 }
+
+// queryString := "what is repeat_penalty"
+// vectorResults, err := db.QueryVectorDatabase(ctx, queryString)
+// if err != nil {
+// 	log.Error().Msgf("Failed to fetch results from vector db: %v", err)
+// 	os.Exit(1)
+// }
+
+// _ = vectorResults
+// chat.ChatOllama(ctx)
+// gitquery.GitCodeQuery()
+
+// vectorResults := `mirostat_tau Controls the balance between coherence and diversity of the output.
+// A lower value will result in more focused and coherent text. (Default: 5.0)`

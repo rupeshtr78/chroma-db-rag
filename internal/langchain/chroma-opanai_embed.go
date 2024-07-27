@@ -1,4 +1,4 @@
-package openapiclient
+package langchain
 
 import (
 	"context"

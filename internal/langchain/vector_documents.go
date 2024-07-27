@@ -1,17 +1,15 @@
-package vectordb
+package langchain
 
 import (
-	"chroma-db/pkg/logger"
 	"context"
 	"errors"
 
+	"github.com/rs/zerolog/log"
 	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/schema"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/chroma"
 )
-
-var log = logger.Log
 
 // Add documents to the vector store.
 func AddDocuments(ctx context.Context,
