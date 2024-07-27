@@ -32,10 +32,10 @@ func ParsePDF(path string) ([]string, Metadata, error) {
 	}
 	defer file.Close()
 
-	metadata["title"] = strings.Split(file.Name(), "/")[1]
+	fileName := strings.Split(file.Name(), "/")[1]
 
 	numPages := pdfReader.NumPage()
-	fmt.Printf("Number of pages: %d\n", numPages)
+	log.Debug().Msgf("Number of pdf pages: %d", numPages)
 
 	for i := 0; i < numPages; i++ {
 		page := pdfReader.Page(i + 1)
@@ -48,8 +48,15 @@ func ParsePDF(path string) ([]string, Metadata, error) {
 			return nil, nil, err
 		}
 		pdfStrings = append(pdfStrings, text)
+		metadata[fmt.Sprintf("page_%d", i+1)] = map[string]string{
+			"file_name": fileName,
+			"page_num":  fmt.Sprintf("%d", i+1),
+		}
 
 	}
+
+	log.Debug().Msgf("PDF List Length: %v", len(pdfStrings))
+	log.Debug().Msgf("Metadata Length: %v", len(metadata))
 
 	return pdfStrings, metadata, nil
 }

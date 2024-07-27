@@ -26,7 +26,6 @@ func GetOrCreateCollection(ctx context.Context,
 	newCollection, err := client.NewCollection(
 		ctx,
 		collection.WithName(collectionName),
-		collection.WithMetadata("key1", "value1"),
 		collection.WithEmbeddingFunction(embeddingFunction),
 		collection.WithHNSWDistanceFunction(distanceFn),
 	)

@@ -45,7 +45,7 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 	client.SetDatabase(constants.Database)
 
 	// Get the ollama embedding function
-	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbedding(constants.OllamaUrl, constants.OllamaEmbdedModel)
+	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbedder(constants.OllamaUrl, constants.OllamaEmbdedModel)
 	if err != nil {
 		log.Debug().Msgf("Error getting ollama embedding function: %v\n", err)
 		return "", err

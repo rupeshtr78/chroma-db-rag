@@ -8,10 +8,10 @@ import (
 	"github.com/amikos-tech/chroma-go/types"
 )
 
-func CreateRecordSet(openaiEf types.EmbeddingFunction) (*types.RecordSet, error) {
+func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*types.RecordSet, error) {
 	// Create a new record set with to hold the records to insert
 	rs, err := types.NewRecordSet(
-		types.WithEmbeddingFunction(openaiEf),
+		types.WithEmbeddingFunction(embeddingFunction),
 		types.WithIDGenerator(types.NewULIDGenerator()),
 	)
 	if err != nil {
@@ -22,20 +22,27 @@ func CreateRecordSet(openaiEf types.EmbeddingFunction) (*types.RecordSet, error)
 	return rs, nil
 }
 
-// AddRecords adds records to the record set and collection
-// TODO fix document and metadata
-func AddRecords(ctx context.Context, rs *types.RecordSet, newCollection *chromago.Collection) error {
-	// Add a few records to the record set
-	rs.WithRecord(types.WithDocument("My name is John. And I have two dogs."), types.WithMetadata("key1", "value1"))
-	rs.WithRecord(types.WithDocument("My name is Jane. I am a data scientist."), types.WithMetadata("key2", "value2"))
+// internal/chromaclient/chroma_recordset.go
+func AddToRecordSet(ctx context.Context,
+	collection *chromago.Collection,
+	rs *types.RecordSet,
+	documents []string,
+	metadata map[string]any) (*types.RecordSet, error) {
+
+	// Iterate over documents and metadata list and add records to the record set
+	for _, doc := range documents {
+		rs.WithRecord(types.WithDocument(doc),
+			types.WithMetadatas(metadata),
+		)
+	}
 
 	// Add the records to the collection
-	_, err := newCollection.AddRecords(context.Background(), rs)
+	_, err := collection.AddRecords(ctx, rs)
 	if err != nil {
 		log.Err(err).Msg("Error adding records")
-		return err
+		return nil, err
 	}
-	return err
+	return rs, nil
 }
 
 func QueryRecords(ctx context.Context, collection *chromago.Collection, query []string) error {
@@ -55,3 +62,19 @@ func QueryRecords(ctx context.Context, collection *chromago.Collection, query []
 	fmt.Printf("qr: %v\n", qr.Documents[0][0]) //this should result in the document about dogs
 	return nil
 }
+
+// AddRecords adds records to the record set and collection
+// TODO fix document and metadata
+// func AddRecords(ctx context.Context, rs *types.RecordSet, collection *chromago.Collection) error {
+// 	// Add a few records to the record set
+// 	rs.WithRecord(types.WithDocument("My name is John. And I have two dogs."), types.WithMetadata("key1", "value1"))
+// 	rs.WithRecord(types.WithDocument("My name is Jane. I am a data scientist."), types.WithMetadata("key2", "value2"))
+
+// 	// Add the records to the collection
+// 	_, err := collection.AddRecords(context.Background(), rs)
+// 	if err != nil {
+// 		log.Err(err).Msg("Error adding records")
+// 		return err
+// 	}
+// 	return err
+// }
