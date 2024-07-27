@@ -23,25 +23,23 @@ func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*types.RecordSe
 }
 
 // internal/chromaclient/chroma_recordset.go
-func AddToRecordSet(ctx context.Context,
+func AddDocsToRecordSet(ctx context.Context,
 	collection *chromago.Collection,
 	rs *types.RecordSet,
 	documents []string,
 	metadata map[string]any) (*types.RecordSet, error) {
 
 	// Iterate over documents and metadata list and add records to the record set
-	for _, doc := range documents {
-		rs.WithRecord(types.WithDocument(doc),
-			types.WithMetadatas(metadata),
+	for i, doc := range documents {
+		pageNum := i + 1
+		key := fmt.Sprintf("%d", pageNum)
+		metadataValue := metadata[key].(string)
+		rs.WithRecord(
+			types.WithDocument(doc),
+			types.WithMetadata(key, metadataValue),
 		)
 	}
 
-	// Add the records to the collection
-	_, err := collection.AddRecords(ctx, rs)
-	if err != nil {
-		log.Err(err).Msg("Error adding records")
-		return nil, err
-	}
 	return rs, nil
 }
 

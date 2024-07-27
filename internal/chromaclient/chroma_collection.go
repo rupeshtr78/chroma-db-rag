@@ -15,17 +15,20 @@ func GetOrCreateCollection(ctx context.Context,
 	embeddingFunction types.EmbeddingFunction,
 	distanceFn types.DistanceFunction) (*chromago.Collection, error) {
 
-	if c, err := client.GetCollection(ctx,
-		collectionName,
-		embeddingFunction); err == nil {
-		log.Debug().Msgf("Collection %v already exists\n", collectionName)
-		return c, nil
-	}
-
+	// var newCollection *chromago.Collection
+	// Check if the collection already exists
+	// if c, err := client.GetCollection(ctx,
+	// 	collectionName,
+	// 	embeddingFunction); err == nil {
+	// 	log.Debug().Msgf("Collection %v already exists\n", collectionName)
+	// 	newCollection = c
+	// 	return newCollection, nil
+	// }
 	// Create a new collection with options
 	newCollection, err := client.NewCollection(
 		ctx,
 		collection.WithName(collectionName),
+		collection.WithCreateIfNotExist(true),
 		collection.WithEmbeddingFunction(embeddingFunction),
 		collection.WithHNSWDistanceFunction(distanceFn),
 	)
@@ -33,7 +36,11 @@ func GetOrCreateCollection(ctx context.Context,
 		log.Err(err).Msg("error creating collection")
 		return nil, err
 	}
+
+	log.Debug().Msgf("Collection %v created\n", collectionName)
+
 	return newCollection, nil
+
 }
 
 func DeleteCollection(ctx context.Context, collectionName string, client *chromago.Client) error {

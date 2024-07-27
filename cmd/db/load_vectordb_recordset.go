@@ -6,6 +6,7 @@ import (
 	"chroma-db/internal/documents"
 	ollamamodel "chroma-db/internal/ollama"
 	"context"
+	"fmt"
 )
 
 func LoadDataToVectorDB(ctx context.Context, docPath string) (string, error) {
@@ -63,9 +64,22 @@ func LoadDataToVectorDB(ctx context.Context, docPath string) (string, error) {
 		return "", err
 	}
 
-	recordSet, err = chromaclient.AddToRecordSet(ctx, collection, recordSet, docs, metadata)
+	for i, doc := range docs {
+		key := fmt.Sprintf("%d", i+1)
+		log.Debug().Msgf("Document: %v\n", doc)
+		log.Debug().Msgf("Metadata: %v\n", metadata[key])
+
+	}
+
+	recordSet, err = chromaclient.AddDocsToRecordSet(ctx, collection, recordSet, docs, metadata)
 	if err != nil {
 		log.Debug().Msgf("Error adding to record set: %v\n", err)
+		return "", err
+	}
+
+	_, err = recordSet.BuildAndValidate(ctx)
+	if err != nil {
+		log.Debug().Msgf("Error building and validating records: %v\n", err)
 		return "", err
 	}
 
