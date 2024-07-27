@@ -4,6 +4,7 @@ import (
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
+	"github.com/amikos-tech/chroma-go/collection"
 	"github.com/amikos-tech/chroma-go/types"
 )
 
@@ -21,15 +22,34 @@ func GetOrCreateCollection(ctx context.Context,
 		return c, nil
 	}
 
-	c, err := client.CreateCollection(ctx,
-		collectionName,
-		Metadata{},
-		true,
-		embeddingFunction,
-		distanceFn)
+	// Create a new collection with options
+	newCollection, err := client.NewCollection(
+		ctx,
+		collection.WithName(collectionName),
+		collection.WithMetadata("key1", "value1"),
+		collection.WithEmbeddingFunction(embeddingFunction),
+		collection.WithHNSWDistanceFunction(distanceFn),
+	)
 	if err != nil {
-		log.Err(err).Msgf("Failed to create collection %v\n", collectionName)
+		log.Err(err).Msg("error creating collection")
 		return nil, err
 	}
-	return c, nil
+	return newCollection, nil
+}
+
+func DeleteCollection(ctx context.Context, collectionName string, client *chromago.Client) error {
+	// Check if the collection already exists
+	_, err := client.GetCollection(ctx, collectionName, nil)
+	if err != nil {
+		log.Err(err).Msgf("Error getting collection: %s \n", collectionName)
+		return err
+	}
+
+	// Collection already exists, Delete the collection
+	_, err = client.DeleteCollection(ctx, collectionName)
+	if err != nil {
+		log.Err(err).Msgf("Error deleting collection: %s \n", collectionName)
+		return err
+	}
+	return nil
 }

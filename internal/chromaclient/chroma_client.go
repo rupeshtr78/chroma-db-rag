@@ -5,10 +5,7 @@ import (
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	openapi "github.com/amikos-tech/chroma-go/swagger"
-	"github.com/amikos-tech/chroma-go/types"
-	"github.com/tmc/langchaingo/embeddings"
-	"github.com/tmc/langchaingo/vectorstores/chroma"
+	openapiclient "github.com/amikos-tech/chroma-go/swagger"
 )
 
 type Metadata map[string]interface{}
@@ -30,29 +27,8 @@ func GetChromaClient(ctx context.Context, url string) (*chromago.Client, error) 
 	return chromaClient, err
 }
 
-// CreateChromaStore creates a new langchain **chroma.Store** with the given parameters
-func CreateChromaStore(ctx context.Context,
-	chromaUrl string,
-	nameSpace string,
-	embedder embeddings.Embedder,
-	distanceFunction types.DistanceFunction) (*chroma.Store, error) {
-
-	store, err := chroma.New(
-		chroma.WithChromaURL(chromaUrl),
-		chroma.WithNameSpace(nameSpace),
-		chroma.WithEmbedder(embedder),
-		chroma.WithDistanceFunction(distanceFunction), // default is cosine l2 ip
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &store, nil
-
-}
-
 // GetOrCreateTenant creates a new **openapi.Tenant** if it does not exist
-func GetOrCreateTenant(ctx context.Context, client *chromago.Client, tenantName string) (*openapi.Tenant, error) {
+func GetOrCreateTenant(ctx context.Context, client *chromago.Client, tenantName string) (*openapiclient.Tenant, error) {
 
 	if t, err := client.GetTenant(ctx, tenantName); err == nil {
 		log.Debug().Msgf("Tenant %v already exists\n", tenantName)
@@ -67,7 +43,10 @@ func GetOrCreateTenant(ctx context.Context, client *chromago.Client, tenantName 
 	return t, nil
 }
 
-func GetOrCreateDatabase(ctx context.Context, client *chromago.Client, dbName string, tenantName *string) (*openapi.Database, error) {
+func GetOrCreateDatabase(ctx context.Context,
+	client *chromago.Client,
+	dbName string,
+	tenantName *string) (*openapiclient.Database, error) {
 
 	if d, err := client.GetDatabase(ctx, dbName, tenantName); err == nil {
 		log.Debug().Msgf("Database %v already exists\n", dbName)
