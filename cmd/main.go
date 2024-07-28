@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// Query the collection
-	queryString := "what is mirostat_eta?"
+	queryString := "what is mirostat_tau?"
 	queryTexts := []string{queryString}
 	vectorResults, err := queryvectordb.QueryVectorDbWithOptions(ctx, collection, queryTexts)
 	if err != nil {
@@ -36,7 +36,7 @@ func main() {
 
 	}
 
-	log.Info().Msgf("Final Prompt: %s", s)
+	// log.Info().Msgf("Final Prompt: %s", s)
 
 	chat.ChatOllama(ctx, s)
 }

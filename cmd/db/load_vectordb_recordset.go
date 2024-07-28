@@ -80,7 +80,7 @@ func LoadDataToVectorDB(ctx context.Context, docPath string) (*chromago.Collecti
 	// }
 
 	// Load text from a file
-	docs, metadata, err := documents.TextLoader(docPath)
+	docs, metadata, err := documents.TextLoaderV2(ctx, docPath)
 	if err != nil {
 		log.Debug().Msgf("Error loading text: %v\n", err)
 		return nil, err

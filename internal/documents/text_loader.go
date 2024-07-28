@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/tmc/langchaingo/documentloaders"
+	"github.com/tmc/langchaingo/textsplitter"
 )
 
 func TextLoader(file string) ([]string, Metadata, error) {
@@ -63,7 +64,7 @@ func TextLoader(file string) ([]string, Metadata, error) {
 
 }
 
-func TextLoaderV2(file string) ([]string, Metadata, error) {
+func TextLoaderV2(ctx context.Context, file string) ([]string, Metadata, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, nil, err
@@ -71,23 +72,34 @@ func TextLoaderV2(file string) ([]string, Metadata, error) {
 	defer f.Close()
 
 	loader := documentloaders.NewText(f)
-	docs, err := loader.Load(context.Background())
-	if err != nil {
+	// docs, err := loader.Load(ctx)
+
+	splitter := textsplitter.NewRecursiveCharacter(
+		textsplitter.WithChunkSize(1024),
+		textsplitter.WithChunkOverlap(512),
+	)
+	docs, err := loader.LoadAndSplit(ctx, splitter)
+
+	if err != nil || len(docs) == 0 {
 		return nil, nil, err
 	}
 
-	if len(docs) == 0 {
-		return nil, nil, nil
+	// returning a slice of strings and a Metadata map
+	strSlice := make([]string, 0)
+	metadata := make(Metadata)
+	for _, doc := range docs {
+		strSlice = append(strSlice, doc.PageContent)
+		if doc.Metadata == nil {
+			continue
+		}
+		for k, v := range doc.Metadata {
+			log.Debug().Msgf("TextLoaderV2: Metadata: %s: %s", k, v)
+			metadata[k] = v
+		}
 	}
 
-	metaData := map[string]string{
-		"file": file,
-	}
-	meta := make(Metadata)
-	for k, v := range metaData {
-		meta[k] = v
-	}
+	log.Info().Msgf("TextLoaderV2: Successfully loaded text data from %s", file)
+	log.Debug().Msgf("TextLoaderV2: Metadata: %v", metadata)
 
-	// Assuming you want to keep the original behavior of returning a slice of strings
-	return []string{docs[0].PageContent}, meta, nil
+	return strSlice, metadata, nil
 }
