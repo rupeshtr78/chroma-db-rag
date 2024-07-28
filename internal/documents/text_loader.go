@@ -1,8 +1,11 @@
 package documents
 
 import (
+	"context"
 	"os"
 	"strings"
+
+	"github.com/tmc/langchaingo/documentloaders"
 )
 
 func TextLoader(file string) ([]string, Metadata, error) {
@@ -58,4 +61,33 @@ func TextLoader(file string) ([]string, Metadata, error) {
 	}
 	return []string{str}, meta, nil
 
+}
+
+func TextLoaderV2(file string) ([]string, Metadata, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer f.Close()
+
+	loader := documentloaders.NewText(f)
+	docs, err := loader.Load(context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(docs) == 0 {
+		return nil, nil, nil
+	}
+
+	metaData := map[string]string{
+		"file": file,
+	}
+	meta := make(Metadata)
+	for k, v := range metaData {
+		meta[k] = v
+	}
+
+	// Assuming you want to keep the original behavior of returning a slice of strings
+	return []string{docs[0].PageContent}, meta, nil
 }
