@@ -12,7 +12,7 @@ var (
 	OllamaEmbdedModel string                 = "nomic-embed-text" //nomic-embed-text" //"mxbai-embed-large"
 	OllamaChatModel   string                 = "llama3:latest"
 	OllamaUrl         string                 = "http://10.0.0.213:11434"
-	DistanceFn        types.DistanceFunction = types.L2
+	DistanceFn        types.DistanceFunction = types.COSINE
 	TemplateFile      string                 = "internal/prompts/prompt_template.tmpl"
 	LogLevel          string                 = "debug"
 )

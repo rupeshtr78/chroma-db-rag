@@ -73,9 +73,16 @@ func LoadDataToVectorDB(ctx context.Context, docPath string) (*chromago.Collecti
 	}
 
 	// Parse the PDF document
-	docs, metadata, err := documents.ParsePDF(docPath)
+	// docs, metadata, err := documents.ParsePDF(docPath)
+	// if err != nil {
+	// 	log.Debug().Msgf("Error parsing PDF: %v\n", err)
+	// 	return nil, err
+	// }
+
+	// Load text from a file
+	docs, metadata, err := documents.TextLoader(docPath)
 	if err != nil {
-		log.Debug().Msgf("Error parsing PDF: %v\n", err)
+		log.Debug().Msgf("Error loading text: %v\n", err)
 		return nil, err
 	}
 
@@ -87,7 +94,7 @@ func LoadDataToVectorDB(ctx context.Context, docPath string) (*chromago.Collecti
 	// }
 
 	// Add the documents to the record set
-	recordSet, err = chromaclient.AddDocsToRecordSet(ctx, collection, recordSet, docs, metadata)
+	recordSet, err = chromaclient.AddTextToRecordSet(ctx, collection, recordSet, docs, metadata)
 	if err != nil {
 		log.Debug().Msgf("Error adding to record set: %v\n", err)
 		return nil, err

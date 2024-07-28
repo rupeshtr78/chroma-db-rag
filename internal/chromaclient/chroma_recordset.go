@@ -22,8 +22,8 @@ func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*types.RecordSe
 	return rs, nil
 }
 
-// internal/chromaclient/chroma_recordset.go
-func AddDocsToRecordSet(ctx context.Context,
+// AddPdfToRecordSet adds pdf documents to the record set
+func AddPdfToRecordSet(ctx context.Context,
 	collection *chromago.Collection,
 	rs *types.RecordSet,
 	documents []string,
@@ -37,6 +37,24 @@ func AddDocsToRecordSet(ctx context.Context,
 		rs.WithRecord(
 			types.WithDocument(doc),
 			types.WithMetadata(key, metadataValue),
+		)
+	}
+
+	return rs, nil
+}
+
+// internal/chromaclient/chroma_recordset.go
+func AddTextToRecordSet(ctx context.Context,
+	collection *chromago.Collection,
+	rs *types.RecordSet,
+	documents []string,
+	metadata map[string]any) (*types.RecordSet, error) {
+
+	// Iterate over documents and metadata list and add records to the record set
+	for _, doc := range documents {
+		rs.WithRecord(
+			types.WithDocument(doc),
+			// types.WithMetadatas(metadata),
 		)
 	}
 
