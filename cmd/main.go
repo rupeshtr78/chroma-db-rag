@@ -2,24 +2,30 @@ package main
 
 import (
 	"chroma-db/cmd/chat"
-	"chroma-db/cmd/db"
+	"chroma-db/cmd/ollamarag"
+	"chroma-db/internal/constants"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/queryvectordb"
 	"chroma-db/pkg/logger"
 	"context"
+	"time"
 )
 
 var log = logger.Log
 
 func main() {
 	ctx := context.Background()
-	// ctx, cancel := context.WithTimeout(ctx, time.Second*120)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 	// ctx, cancel := context.WithCancel(ctx)
-	// defer cancel()
+	defer cancel()
 
-	collection, err := db.LoadDataToVectorDB(ctx, "test/model_params.txt")
+	collection, err := ollamarag.RunOllamaRag(ctx,
+		constants.ChromaUrl,
+		constants.TenantName,
+		constants.Database,
+		"test/model_params.txt")
 	if err != nil {
-		log.Error().Msgf("Failed to load data to vector db: %v", err)
+		log.Error().Msgf("Failed to run ollama rag: %v", err)
 	}
 
 	// Query the collection

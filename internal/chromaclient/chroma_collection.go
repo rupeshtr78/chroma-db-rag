@@ -1,6 +1,7 @@
 package chromaclient
 
 import (
+	"chroma-db/internal/constants"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -22,8 +23,8 @@ func GetOrCreateCollection(ctx context.Context,
 		collection.WithCreateIfNotExist(true),
 		collection.WithEmbeddingFunction(embeddingFunction),
 		collection.WithHNSWDistanceFunction(distanceFn),
-		collection.WithTenant(client.Tenant),
-		collection.WithDatabase(client.Database),
+		collection.WithTenant(constants.TenantName),
+		collection.WithDatabase(constants.Database),
 	)
 	if err != nil {
 		log.Err(err).Msg("error creating collection")

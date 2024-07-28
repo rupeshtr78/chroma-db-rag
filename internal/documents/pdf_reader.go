@@ -1,10 +1,12 @@
 package documents
 
 import (
+	"chroma-db/internal/constants"
 	"fmt"
 	"strings"
 
 	"github.com/ledongthuc/pdf"
+	"github.com/rs/zerolog/log"
 )
 
 func Pdfmain() {
@@ -22,9 +24,9 @@ func Pdfmain() {
 	fmt.Println(m)
 }
 
-func ParsePDF(path string) ([]string, Metadata, error) {
+func ParsePDF(path string) ([]string, constants.Metadata, error) {
 	pdfStrings := []string{}
-	metadata := Metadata{}
+	metadata := constants.Metadata{}
 
 	file, pdfReader, err := pdf.Open(path)
 	if err != nil {

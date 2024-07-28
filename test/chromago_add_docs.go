@@ -1,13 +1,11 @@
-package documents
+package test
 
 import (
-	"chroma-db/pkg/logger"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
+	"github.com/rs/zerolog/log"
 )
-
-var log = logger.Log
 
 type Metadata map[string]interface{}
 

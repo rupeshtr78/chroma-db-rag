@@ -1,15 +1,17 @@
 package documents
 
 import (
+	"chroma-db/internal/constants"
 	"context"
 	"os"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/tmc/langchaingo/documentloaders"
 	"github.com/tmc/langchaingo/textsplitter"
 )
 
-func TextLoader(file string) ([]string, Metadata, error) {
+func TextLoader(file string) ([]string, constants.Metadata, error) {
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -56,7 +58,7 @@ func TextLoader(file string) ([]string, Metadata, error) {
 	}
 
 	// Convert metaData to Metadata
-	meta := make(Metadata)
+	meta := make(constants.Metadata)
 	for k, v := range metaData {
 		meta[k] = v
 	}
@@ -64,7 +66,7 @@ func TextLoader(file string) ([]string, Metadata, error) {
 
 }
 
-func TextLoaderV2(ctx context.Context, file string) ([]string, Metadata, error) {
+func TextLoaderV2(ctx context.Context, file string) ([]string, constants.Metadata, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, nil, err
@@ -86,7 +88,7 @@ func TextLoaderV2(ctx context.Context, file string) ([]string, Metadata, error) 
 
 	// returning a slice of strings and a Metadata map
 	strSlice := make([]string, 0)
-	metadata := make(Metadata)
+	metadata := make(constants.Metadata)
 	for _, doc := range docs {
 		strSlice = append(strSlice, doc.PageContent)
 		if doc.Metadata == nil {

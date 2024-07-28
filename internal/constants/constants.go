@@ -16,3 +16,5 @@ var (
 	TemplateFile      string                 = "internal/prompts/prompt_template.tmpl"
 	LogLevel          string                 = "debug"
 )
+
+type Metadata map[string]interface{}
