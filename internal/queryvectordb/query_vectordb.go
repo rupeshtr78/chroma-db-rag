@@ -54,7 +54,7 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	options := []types.CollectionQueryOption{
 		types.WithQueryTexts(queryTexts),
 		types.WithNResults(5),
-		// types.WithOffset(1),
+		types.WithOffset(1),
 		// types.WithQueryEmbeddings([]*types.Embedding{embed}),
 	}
 
@@ -64,10 +64,30 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 		return "", qrerr
 	}
 
-	fmt.Printf("qr: %v\n", qr.Documents[0][0]) // this should result in the document about dogs
+	log.Debug().Msgf("Query Results Length: %v\n", len(qr.Documents))
+
+	fmt.Printf("qr: %v\n", qr.Documents[0][0])
 	log.Info().Msgf("Query Distance: %v\n", qr.Distances)
 	log.Info().Msgf("Query Metadata: %v\n", qr.Metadatas)
 
+	// assuming smaller distance is better pick the first result
 	queryResults := qr.Documents[0][0]
 	return queryResults, nil
+}
+
+// TODO: Implement this function
+func RerankQueryResult() {
+	// queryRerank := &reranker.SimpleReranker{}
+
+	// rankedResults, err := queryRerank.Rerank(ctx, "", qr)
+	// if err != nil {
+	// 	fmt.Println("Error in reranking:", err)
+	// 	return "", err
+	// }
+
+	// rankedResults, err := queryRerank.RerankResults(ctx, qr)
+	// if err != nil {
+	// 	log.Debug().Msgf("Error reranking query results: %s \n", err)
+	// 	return "", err
+	// }
 }
