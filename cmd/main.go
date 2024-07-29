@@ -9,7 +9,6 @@ import (
 	"chroma-db/pkg/logger"
 	"context"
 	"sync"
-	"time"
 
 	chromago "github.com/amikos-tech/chroma-go"
 )
@@ -18,8 +17,9 @@ var log = logger.Log
 
 func main() {
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*30)
-	// ctx, cancel := context.WithCancel(ctx)
+	// sometimes timeout happens while model is running on remote server then use cancel context
+	// ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	errChan := make(chan error, 1)
@@ -42,7 +42,9 @@ func main() {
 
 	}(ctx, "test/model_params.txt", constants.TXT)
 
-	// Query the collection
+	// Query the collection with the query text
+	// what is mirostat_tau
+	// queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	queryString := "what is mirostat_tau?"
 	queryTexts := []string{queryString}
 	vectorChan := make(chan string, 1)
@@ -74,7 +76,7 @@ func main() {
 
 	// Get the vector results
 	vectorResults := <-vectorChan
-	prompts, err := prompts.GetTemplate(queryString, vectorResults)
+	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, vectorResults)
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
 

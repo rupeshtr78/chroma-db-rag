@@ -14,6 +14,7 @@ var (
 	OllamaUrl         string                 = "http://10.0.0.213:11434"
 	DistanceFn        types.DistanceFunction = types.COSINE
 	TemplateFile      string                 = "internal/prompts/prompt_template.tmpl"
+	SystemPromptFile  string                 = "internal/prompts/system_prompt_explain.tmpl" // "internal/prompts/system_prompt_explain.tmpl"
 	LogLevel          string                 = "debug"
 )
 

@@ -17,7 +17,7 @@ type PromptData struct {
 	Prompt       string
 }
 
-func GetTemplate(prompt string, content string) (string, error) {
+func GetTemplate(sytemPromptFile string, prompt string, content string) (string, error) {
 
 	// Load the template from the file
 	tmpl, err := template.ParseFiles(constants.TemplateFile)
@@ -26,7 +26,7 @@ func GetTemplate(prompt string, content string) (string, error) {
 		return "", err
 	}
 
-	systemPrompt, err := os.ReadFile("internal/prompts/system_prompt_doc.tmpl")
+	systemPrompt, err := os.ReadFile(sytemPromptFile)
 	if err != nil {
 		log.Fatal().Msgf("Failed to read system prompt file: %v", err)
 		return "", err
