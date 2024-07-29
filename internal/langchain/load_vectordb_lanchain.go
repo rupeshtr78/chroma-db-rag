@@ -12,6 +12,7 @@ import (
 	"github.com/tmc/langchaingo/vectorstores"
 )
 
+// Poc using langchain
 func QueryVectorDatabase(ctx context.Context, queryString string) (string, error) {
 	// Get the chroma client
 	client, err := chromaclient.GetChromaClient(ctx, constants.ChromaUrl)

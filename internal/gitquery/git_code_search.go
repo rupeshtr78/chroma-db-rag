@@ -12,6 +12,7 @@ import (
 
 const githubCodeAPI = "https://api.github.com/search/code"
 
+// GitHubCodeResponse represents the response from the GitHub API
 type GitHubCodeResponse struct {
 	TotalCount        int  `json:"total_count"`
 	IncompleteResults bool `json:"incomplete_results"`
@@ -32,6 +33,8 @@ type GitHubCodeResponse struct {
 	} `json:"items"`
 }
 
+// GitCodeQuery searches for code on GitHub using the GitHub API
+// Idea is to use this results to the query vector db
 func GitCodeQuery() {
 	if len(os.Args) < 3 {
 		log.Fatalf("Usage: %s <search-query> <language>", os.Args[0])

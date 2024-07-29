@@ -9,6 +9,7 @@ import (
 )
 
 // CreateChromaStore creates a new langchain **chroma.Store** with the given parameters
+// Poc using langchain
 func CreateChromaStore(ctx context.Context,
 	chromaUrl string,
 	nameSpace string,

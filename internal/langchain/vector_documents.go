@@ -11,7 +11,7 @@ import (
 	"github.com/tmc/langchaingo/vectorstores/chroma"
 )
 
-// Add documents to the vector store.
+// Add documents to the vector store. // Poc using langchain
 func AddDocuments(ctx context.Context,
 	store *chroma.Store,
 	documents []schema.Document,

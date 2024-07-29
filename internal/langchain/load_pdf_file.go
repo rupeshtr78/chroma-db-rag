@@ -9,6 +9,7 @@ import (
 	"github.com/tmc/langchaingo/schema"
 )
 
+// Poc using langchain
 func PdfToDocument(ctx context.Context, file string) ([]schema.Document, error) {
 	// Open the pdf file
 	f, err := os.Open("./test/Model Params.pdf")
