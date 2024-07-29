@@ -1,4 +1,4 @@
-package documents
+package test
 
 import (
 	"chroma-db/internal/constants"
@@ -11,7 +11,7 @@ import (
 	"github.com/tmc/langchaingo/textsplitter"
 )
 
-func TextLoader(file string) ([]string, constants.Metadata, error) {
+func TextLoaderV1(file string) ([]string, constants.Metadata, error) {
 
 	f, err := os.Open(file)
 	if err != nil {

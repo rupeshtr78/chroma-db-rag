@@ -71,15 +71,13 @@ func LoadDataToVectorDB(ctx context.Context, docPath string) (*chromago.Collecti
 		return nil, err
 	}
 
-	// Parse the PDF document
-	// docs, metadata, err := documents.ParsePDF(docPath)
-	// if err != nil {
-	// 	log.Debug().Msgf("Error parsing PDF: %v\n", err)
-	// 	return nil, err
-	// }
-
 	// Load text from a file
-	docs, metadata, err := documents.TextLoaderV2(ctx, docPath)
+	docType := constants.TXT
+	docLoader := documents.NewDocumentLoader(docType)
+
+	docs, metadata, err := docLoader.LoadDocument(ctx, docPath)
+
+	// docs, metadata, err := documents.TextLoaderV2(ctx, docPath)
 	if err != nil {
 		log.Debug().Msgf("Error loading text: %v\n", err)
 		return nil, err

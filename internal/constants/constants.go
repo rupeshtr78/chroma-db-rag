@@ -18,3 +18,11 @@ var (
 )
 
 type Metadata map[string]interface{}
+
+type DocType string
+
+// Supported Document types
+const (
+	PDF DocType = "pdf"
+	TXT DocType = "txt"
+)

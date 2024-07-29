@@ -30,18 +30,17 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
-	go func() {
+	go func(ctx context.Context, path string, docType constants.DocType) {
 		defer wg.Done()
-		collection, err := ollamarag.RunOllamaRag(ctx,
-			constants.ChromaUrl,
-			constants.TenantName,
-			constants.Database,
-			"test/model_params.txt")
+		collection, err := ollamarag.RunOllamaRagV2(ctx,
+			ollamarag.WithDocPath(path),
+			ollamarag.WithDocType(constants.TXT))
 		if err != nil {
 			errChan <- err
 		}
 		collectionChan <- collection
-	}()
+
+	}(ctx, "test/model_params.txt", constants.TXT)
 
 	// Query the collection
 	queryString := "what is mirostat_tau?"

@@ -17,7 +17,7 @@ var log = logger.Log
 // Creates a new collection with the given name, embedding function and distance function.
 // Creates a new record set.
 // Returns the collection and record set.
-func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, databaseName string) (*chromago.Collection, *types.RecordSet, error) {
+func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, databaseName string, embeddingModel string) (*chromago.Collection, *types.RecordSet, error) {
 	// Initialize the chroma client
 	client, err := chromaclient.GetChromaClient(ctx, constants.ChromaUrl)
 	if err != nil {
@@ -47,7 +47,7 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 	log.Debug().Msgf("Client Database: %v\n", client.Database)
 
 	// Get the ollama embedding function
-	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbeddingFn(constants.OllamaUrl, constants.OllamaEmbdedModel)
+	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbeddingFn(constants.OllamaUrl, embeddingModel)
 	if err != nil {
 		log.Debug().Msgf("Error getting ollama embedding function: %v\n", err)
 		return nil, nil, err

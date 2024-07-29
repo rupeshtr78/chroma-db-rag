@@ -73,6 +73,9 @@ func ChromaEmbedder() {
 	}
 
 	count, err := coll.Count(ctx)
+	if err != nil {
+		log.Fatalf("count: %v\n", err)
+	}
 
 	fmt.Printf("Collecton count: %v\n", count)
 	query := make([]string, len(exampleCases))
