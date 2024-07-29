@@ -1,6 +1,29 @@
 # chroma-db
 
 This repository includes a Go project for working with Chroma DB and ollama embedding models. It can set up and run a vector database using Chroma DB, handle user queries, and interact with an embedding model. It also includes a Dockerfile for running the project locally and a docker compose file to run the project in a container.
+## Sample Results
+```txt
+<|user|> what is mirostat_tau?</s>:-
+Based on the provided content, I can answer your query.
+
+**Query Result:** Mirostat_tau Controls the balance between coherence and diversity of the output. A lower value will result in more focused and coherent text. (Default: 5.0)
+
+**Document Content:**
+
+mirostat_tau Controls the balance between coherence and diversity of the output. A lower value will result in more focused and coherent text. (Default: 5.0)
+float
+mirostat_tau 5.0
+
+**Additional Information on this Topic:**
+
+Here are three main points related to Mirostat_tau:
+
+1. **Coherence vs Diversity:** Mirostat_tau controls the balance between coherence and diversity of the output, which means it determines how focused or creative the generated text will be.
+2. **Lower Values Mean More Focus:** A lower value for mirostat_tau results in more focused and coherent text, while a higher value allows for more diverse and potentially less coherent output.
+3. **Default Value:** The default value for Mirostat_tau is 5.0, which means that if no specific value is provided, the model will generate text with a balance between coherence and diversity.
+
+Please note that these points are based solely on the provided content and do not go beyond it.%    
+```
 ## Getting Started
 
 ### Prerequisites
@@ -49,17 +72,14 @@ docker-compose up -d
 - **internal/constants/**:
   - **constants.go**: Houses all the necessary constants used across the project.
 
-- **test/**:
-  - **chroma-ollama.go**: Contains sample queries to interact with Chroma DB.
-
-- **chromadb/**: Directory intended for Chroma DB related files and volumes.
-
 - **docker-compose.yaml**: Docker Compose configuration file for setting up the Chroma DB service.
 
-## Scripts
+## Configuration
 
-- **Makefile**: For managing the generation, build, and installation of Python bindings.
-- **setup.py**: Setup script for Python bindings.
+Adjust configuration values in `internal/constants/constants.go` to fit your needs. This includes settings like:
+
+Chroma DB URL, Tenant name, Database & Namespace.
+Ollama model type and URL.
 
 ### Functionality
 
@@ -68,7 +88,7 @@ docker-compose up -d
 Start the VectorDb with the following command:
 
 ```sh
-db.RunVectorDb(ctx)
+docker compose up
 ```
 
 #### Chat with Ollama
@@ -76,18 +96,10 @@ db.RunVectorDb(ctx)
 Execute chat-related operations:
 
 ```sh
-chat.ChatOllama(ctx)
+go run ./cmd/main.go
 ```
 
-#### Sample Query (test/chroma-ollama.go)
 
-```go
-func SampleQuery() []exampleCase {
-    type filter = map[string]any
-    // ... example cases
-    return exampleCases
-}
-```
 
 ## Configuration
 
