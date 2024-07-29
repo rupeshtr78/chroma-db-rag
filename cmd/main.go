@@ -8,7 +8,10 @@ import (
 	"chroma-db/internal/queryvectordb"
 	"chroma-db/pkg/logger"
 	"context"
+	"sync"
 	"time"
+
+	chromago "github.com/amikos-tech/chroma-go"
 )
 
 var log = logger.Log
@@ -19,24 +22,60 @@ func main() {
 	// ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	collection, err := ollamarag.RunOllamaRag(ctx,
-		constants.ChromaUrl,
-		constants.TenantName,
-		constants.Database,
-		"test/model_params.txt")
-	if err != nil {
-		log.Error().Msgf("Failed to run ollama rag: %v", err)
-	}
+	errChan := make(chan error, 1)
+	collectionChan := make(chan *chromago.Collection, 1)
+	defer close(errChan)
+	defer close(collectionChan)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		collection, err := ollamarag.RunOllamaRag(ctx,
+			constants.ChromaUrl,
+			constants.TenantName,
+			constants.Database,
+			"test/model_params.txt")
+		if err != nil {
+			errChan <- err
+		}
+		collectionChan <- collection
+	}()
 
 	// Query the collection
 	queryString := "what is mirostat_tau?"
 	queryTexts := []string{queryString}
-	vectorResults, err := queryvectordb.QueryVectorDbWithOptions(ctx, collection, queryTexts)
-	if err != nil {
-		log.Error().Msgf("Failed to query vector db: %v", err)
+	vectorChan := make(chan string, 1)
+	defer close(vectorChan)
+
+	select {
+	case err := <-errChan:
+		log.Error().Msgf("Failed to run OllamaRag: %v", err)
+		return
+	case <-ctx.Done():
+		log.Error().Msg("Timeout")
+		return
+	case collection := <-collectionChan:
+		wg.Add(1)
+		go func(c context.Context, collection *chromago.Collection, queryTexts []string) {
+			defer wg.Done()
+			vectorResults, err := queryvectordb.QueryVectorDbWithOptions(ctx, collection, queryTexts)
+			if err != nil {
+				errChan <- err
+				log.Error().Msgf("Failed to query vector db: %v", err)
+			}
+			vectorChan <- vectorResults
+		}(ctx, collection, queryTexts)
+
 	}
 
-	s, err := prompts.GetTemplate(queryString, vectorResults)
+	// wait for all go routines to finish
+	wg.Wait()
+
+	// Get the vector results
+	vectorResults := <-vectorChan
+	prompts, err := prompts.GetTemplate(queryString, vectorResults)
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
 
@@ -44,5 +83,5 @@ func main() {
 
 	// log.Info().Msgf("Final Prompt: %s", s)
 
-	chat.ChatOllama(ctx, s)
+	chat.ChatOllama(ctx, prompts)
 }
