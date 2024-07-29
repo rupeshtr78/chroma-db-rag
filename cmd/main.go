@@ -8,9 +8,12 @@ import (
 	"chroma-db/internal/queryvectordb"
 	"chroma-db/pkg/logger"
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
+	"github.com/bbalet/stopwords"
 )
 
 var log = logger.Log
@@ -46,7 +49,7 @@ func main() {
 	// what is mirostat_tau
 	// queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	queryString := "what is mirostat_tau?"
-	queryTexts := []string{queryString}
+	queryTexts := stripStopWords(queryString)
 	vectorChan := make(chan string, 1)
 	defer close(vectorChan)
 
@@ -85,4 +88,18 @@ func main() {
 	// log.Info().Msgf("Final Prompt: %s", s)
 
 	chat.ChatOllama(ctx, prompts)
+}
+
+func stripStopWords(text string) []string {
+	langCode := "en"
+
+	// remove stopwords
+	cleanContent := stopwords.CleanString(text, langCode, true)
+	fmt.Println(cleanContent)
+
+	// covert to slice of words
+	result := strings.Split(cleanContent, " ")
+	fmt.Println(result)
+
+	return result
 }
