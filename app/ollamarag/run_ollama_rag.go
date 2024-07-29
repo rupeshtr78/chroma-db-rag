@@ -1,14 +1,12 @@
 package ollamarag
 
 import (
-	"chroma-db/app/ollamarag"
 	"chroma-db/app/vectordb"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/documents"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	"github.com/rs/zerolog/log"
 )
 
 // Option is a type for argument options
@@ -105,7 +103,7 @@ func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collectio
 	}
 
 	// Add the record set to the collection
-	collection, err = ollamarag.AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
+	collection, err = AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
 	if err != nil {
 		log.Debug().Msgf("Error adding record set to collection: %v\n", err)
 		return nil, err

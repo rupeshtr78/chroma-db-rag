@@ -1,8 +1,8 @@
 package main
 
 import (
-	"chroma-db/cmd/chat"
-	"chroma-db/cmd/ollamarag"
+	"chroma-db/app/chat"
+	"chroma-db/app/ollamarag"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/queryvectordb"
