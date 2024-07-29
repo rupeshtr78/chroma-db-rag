@@ -112,7 +112,12 @@ Adjust configuration values in `internal/constants/constants.go` to fit your nee
 Chroma DB URL, Tenant name, Database & Namespace.
 Ollama model type and URL.
 
-### Functionality
+### Prompt Go Template
+```go
+  <|system|> {{ .SystemPrompt }}</s>
+  <|content|> {{ .Content }}</s>
+  <|user|> {{ .Prompt }}</s>
+```
 
 #### Running VectorDB
 
