@@ -88,10 +88,12 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	log.Info().Msgf("Query Distance: %v\n", qr.Distances)
 	log.Info().Msgf("Query Metadata: %v\n", qr.Metadatas)
 
+	// TODO may be add reranking logic here
 	// assuming smaller distance is better pick the first result qr.Documents[0][0]
 	// trying to get the second result qr.Documents[0][1] better results
-	// TODO add reranking logic here
 	// concatenate the results qr.Documents[0][0] and qr.Documents[0][1]
+	// For specific query results with lowest distance is better qr.Documents[0][0]
+	// When asked general questions, trying concatenating the results for now
 	queryResults := qr.Documents[0][1] + qr.Documents[0][0]
 	return queryResults, nil
 }

@@ -46,10 +46,9 @@ func main() {
 	}(ctx, "test/model_params.txt", constants.TXT)
 
 	// Query the collection with the query text
-	// what is mirostat_tau
-	// queryString := "what is the difference between mirostat_tau and mirostat_eta?"
-	queryString := "what is mirostat_eta?"
-	// vectorQuery := stripStopWords(queryString)
+	queryString := "what is the difference between mirostat_tau and mirostat_eta?"
+	// queryString := "what is mirostat_eta?"
+	// vectorQuery := stripStopWords(queryString) // tried this option no better results
 	vectorQuery := []string{queryString}
 
 	vectorChan := make(chan string, 1)
@@ -92,6 +91,7 @@ func main() {
 	chat.ChatOllama(ctx, prompts)
 }
 
+// stripStopWords removes the stop words from the text and returns a slice of words
 func stripStopWords(text string) []string {
 	langCode := "en"
 
