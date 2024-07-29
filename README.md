@@ -1,8 +1,8 @@
 # Chroma DB and Ollama Embedding Models Integration
 
-This repository demonstrates the integration of Chroma DB, a vector database, with Ollama's embedding models to implement a Retrieval Augmented Generation (RAG) system. Follow these steps to set up and use the system:
+This repository demonstrates the integration of Chroma DB, a vector database, with Ollama's embedding models to implement a Retrieval Augmented Generation (RAG) system.
 
-## Steps to Implement RAG System
+## Steps followed to Implement this RAG System
 
 1. **Set Up Vector Database**:
    - Use Chroma DB to store your document embeddings.
