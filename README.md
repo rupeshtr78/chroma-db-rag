@@ -1,6 +1,37 @@
-# chroma-db
+# Chroma DB and Ollama Embedding Models Integration
 
-This repository includes a Go project for working with Chroma DB and ollama embedding models. It can set up and run a vector database using Chroma DB, handle user queries, and interact with an embedding model. It also includes a Dockerfile for running the project locally and a docker compose file to run the project in a container.
+This repository demonstrates the integration of Chroma DB, a vector database, with Ollama's embedding models to implement a Retrieval Augmented Generation (RAG) system. Follow these steps to set up and use the system:
+
+## Steps to Implement RAG System
+
+1. **Set Up Vector Database**:
+   - Use Chroma DB to store your document embeddings.
+
+2. **Preprocess Documents**:
+   - Split your documents into manageable chunks.
+   - Generate embeddings for each chunk using an embedding model such as "nomic-embed-text" from Ollama.
+
+3. **Store Embeddings**:
+   - Store the chunks and their corresponding embeddings in the Chroma DB vector database.
+
+4. **Query Processing**:
+   - When you have a query:
+     - Generate an embedding for the query.
+     - Perform a similarity search within the vector database to identify the most relevant chunks based on their embeddings.
+     - Retrieve these chunks as context for your query.
+
+5. **Integrate Ollama**:
+   - Connect Ollama with the Chroma DB to facilitate the retrieval of relevant context.
+
+6. **Create Prompt Template**:
+   - Design a prompt template that incorporates both the original query and the context retrieved from the vector database.
+
+7. **Process with Ollama LLM**:
+   - Send the augmented prompt, including the query and context, to the Ollama Large Language Model (LLM) for processing and generation of responses.
+
+This allows to enhance language processing tasks by leveraging the power of vector databases and advanced embedding models.
+
+
 ## Sample Results
 ```txt
 <|user|> what is mirostat_tau?</s>:-
