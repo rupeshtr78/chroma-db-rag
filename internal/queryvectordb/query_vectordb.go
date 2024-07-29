@@ -70,7 +70,7 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	options := []types.CollectionQueryOption{
 		// types.WithQueryTexts(queryTexts),
 		types.WithQueryText(str.String()),
-		types.WithNResults(2),
+		types.WithNResults(2), // add more results need testing
 		// types.WithOffset(10),
 		types.WithQueryEmbeddings(queryEmbedder),
 	}
