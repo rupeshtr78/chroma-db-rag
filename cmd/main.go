@@ -48,8 +48,10 @@ func main() {
 	// Query the collection with the query text
 	// what is mirostat_tau
 	// queryString := "what is the difference between mirostat_tau and mirostat_eta?"
-	queryString := "what is mirostat_tau?"
-	queryTexts := stripStopWords(queryString)
+	queryString := "what is mirostat_eta?"
+	// vectorQuery := stripStopWords(queryString)
+	vectorQuery := []string{queryString}
+
 	vectorChan := make(chan string, 1)
 	defer close(vectorChan)
 
@@ -62,15 +64,15 @@ func main() {
 		return
 	case collection := <-collectionChan:
 		wg.Add(1)
-		go func(c context.Context, collection *chromago.Collection, queryTexts []string) {
+		go func(c context.Context, collection *chromago.Collection, query []string) {
 			defer wg.Done()
-			vectorResults, err := queryvectordb.QueryVectorDbWithOptions(ctx, collection, queryTexts)
+			vectorResults, err := queryvectordb.QueryVectorDbWithOptions(ctx, collection, query)
 			if err != nil {
 				errChan <- err
 				log.Error().Msgf("Failed to query vector db: %v", err)
 			}
 			vectorChan <- vectorResults
-		}(ctx, collection, queryTexts)
+		}(ctx, collection, vectorQuery)
 
 	}
 
@@ -97,9 +99,18 @@ func stripStopWords(text string) []string {
 	cleanContent := stopwords.CleanString(text, langCode, true)
 	fmt.Println(cleanContent)
 
-	// covert to slice of words
-	result := strings.Split(cleanContent, " ")
-	fmt.Println(result)
+	// convert to slice of words
+	result := make([]string, 0)
+	// split the text into words and trim the spaces
+	for _, word := range strings.Split(cleanContent, " ") {
+		trimmedWord := strings.TrimSpace(word)
+		// remove extra spaces
+		if len(trimmedWord) > 0 {
+			result = append(result, trimmedWord)
+		}
+	}
+
+	log.Debug().Msgf("Vector Query Strings: %v", result)
 
 	return result
 }

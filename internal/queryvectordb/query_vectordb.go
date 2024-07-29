@@ -4,6 +4,7 @@ import (
 	"chroma-db/pkg/logger"
 	"context"
 	"fmt"
+	"strings"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/types"
@@ -44,18 +45,34 @@ func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTe
 }
 
 func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (string, error) {
-	// Query the collection
-	// Query the collection using QueryWithOptions
+	// // TODO Remove added for Poc for embedding query
 	// embed := &types.Embedding{
 	// 	ArrayOfFloat32: &[]float32{0.3, 0.4, 0.6},
 	// 	ArrayOfInt32:   &[]int32{0, 2, 4},
 	// }
 
+	// queryTexts = []string{"what is the difference between mirostat_tau and mirostat_eta?"}
+
+	str := strings.Builder{}
+	for _, text := range queryTexts {
+		str.WriteString(text)
+	}
+
+	embedding, err := collection.EmbeddingFunction.EmbedQuery(ctx, str.String())
+	if err != nil {
+		log.Debug().Msgf("Error embedding query: %s \n", err)
+		return "", err
+	}
+
+	queryEmbedder := []*types.Embedding{embedding}
+	// _ = queryEmbedder
+
 	options := []types.CollectionQueryOption{
-		types.WithQueryTexts(queryTexts),
-		types.WithNResults(5),
-		types.WithOffset(1),
-		// types.WithQueryEmbeddings([]*types.Embedding{embed}),
+		// types.WithQueryTexts(queryTexts),
+		types.WithQueryText(str.String()),
+		types.WithNResults(2),
+		// types.WithOffset(10),
+		types.WithQueryEmbeddings(queryEmbedder),
 	}
 
 	qr, qrerr := collection.QueryWithOptions(ctx, options...)
@@ -64,14 +81,18 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 		return "", qrerr
 	}
 
-	log.Debug().Msgf("Query Results Length: %v\n", len(qr.Documents))
+	numResults := len(qr.Documents[0])
+	log.Debug().Msgf("Query Results Length: %v\n", numResults)
 
-	fmt.Printf("qr: %v\n", qr.Documents[0][0])
+	fmt.Printf("qr: %v\n", qr.Documents[0][1])
 	log.Info().Msgf("Query Distance: %v\n", qr.Distances)
 	log.Info().Msgf("Query Metadata: %v\n", qr.Metadatas)
 
-	// assuming smaller distance is better pick the first result
-	queryResults := qr.Documents[0][0]
+	// assuming smaller distance is better pick the first result qr.Documents[0][0]
+	// trying to get the second result qr.Documents[0][1] better results
+	// TODO add reranking logic here
+	// concatenate the results qr.Documents[0][0] and qr.Documents[0][1]
+	queryResults := qr.Documents[0][1] + qr.Documents[0][0]
 	return queryResults, nil
 }
 

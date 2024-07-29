@@ -3,6 +3,7 @@ package reranker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -17,6 +18,12 @@ func (sr *SimpleReranker) Rerank(ctx context.Context, query string, queryResults
 
 	// rank based on distances
 	queryDistances := queryResults.Distances[0]
+	// fetch index of queryResults.Distances[0] between 0.35 and 0.40
+	for idx, dist := range queryDistances {
+		if dist >= 0.35 && dist <= 0.40 {
+			fmt.Printf("idx: %v, dist: %v\n", idx, dist)
+		}
+	}
 
 	rankedResults := make([]*RankedResult, len(queryResults.Documents))
 	for idx, result := range queryResults.Documents {
