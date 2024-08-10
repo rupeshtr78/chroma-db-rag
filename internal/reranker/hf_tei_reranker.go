@@ -50,7 +50,7 @@ type HfRerankResponse struct {
 // q := "What is Deep Learning?"
 // texts := []string{"Tomatos are fruits...", "Deep Learning is not...", "Deep learning is..."}
 // Response: [{"index":2,"score":0.9987814},{"index":1,"score":0.022949383},{"index":0,"score":0.000076250595}]
-func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRerankRequest) ([]HfRerankResponse, error) {
+func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRerankRequest) (*[]HfRerankResponse, error) {
 	reqJSON, err := req.JSON()
 	if err != nil {
 		return nil, err
@@ -100,5 +100,5 @@ func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRera
 		return nil, err
 	}
 
-	return rerankResponses, nil
+	return &rerankResponses, nil
 }

@@ -107,7 +107,7 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 
 // RerankQueryResult reranks the query results using the HuggingFace reranker
 // TODO: Use GRPC https://github.com/huggingface/text-embeddings-inference?tab=readme-ov-file#grpc
-func RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []string) (reranker.HfRerankResponse, error) {
+func RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []string) (*reranker.HfRerankResponse, error) {
 
 	queryString := strings.Builder{}
 	for _, text := range queryTexts {
@@ -133,5 +133,6 @@ func RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []
 
 	log.Info().Msgf("Reranked Results: %v\n", res)
 	// For now return the first result
-	return res[0], nil
+	firstResult := (*res)[0]
+	return &firstResult, nil
 }

@@ -54,7 +54,7 @@ func main() {
 	vectorQuery := []string{queryString}
 
 	vectorChan := make(chan *chromago.QueryResults, 1)
-	rankChan := make(chan reranker.HfRerankResponse, 1)
+	rankChan := make(chan *reranker.HfRerankResponse, 1)
 	defer close(vectorChan)
 	defer close(rankChan)
 
@@ -76,18 +76,18 @@ func main() {
 			}
 			vectorChan <- vectorResults
 		}(ctx, collection, vectorQuery)
-	case queryResults := <-vectorChan:
-		wg.Add(1)
-		// RerankQueryResult(ctx context.Context, queryTexts string, queryResults []string)
-		go func(c context.Context, query []string, queryResults []string) {
-			defer wg.Done()
-			rerankResults, err := vectordbquery.RerankQueryResult(ctx, query, queryResults)
-			if err != nil {
-				errChan <- err
-				log.Error().Msgf("Failed to rerank query results: %v", err)
-			}
-			rankChan <- rerankResults
-		}(ctx, vectorQuery, queryResults.Documents[0])
+		// case queryResults := <-vectorChan:
+		// 	wg.Add(1)
+		// 	// RerankQueryResult(ctx context.Context, queryTexts string, queryResults []string)
+		// 	go func(c context.Context, query []string, queryResults []string) {
+		// 		defer wg.Done()
+		// 		rerankResults, err := vectordbquery.RerankQueryResult(ctx, query, queryResults)
+		// 		if err != nil {
+		// 			errChan <- err
+		// 			log.Error().Msgf("Failed to rerank query results: %v", err)
+		// 		}
+		// 		rankChan <- rerankResults
+		// 	}(ctx, vectorQuery, queryResults.Documents[0])
 
 	}
 
@@ -100,8 +100,8 @@ func main() {
 	}
 
 	// Get the vector results
-	rankedResponse := <-rankChan
-	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, rankedResponse.Text)
+	rankedResponse := <-vectorChan
+	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, rankedResponse.Documents[0][1])
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
 

@@ -120,7 +120,9 @@ func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collectio
 		log.Debug().Msgf("Error counting documents: %s \n", qrerr)
 	}
 
-	log.Debug().Msgf("Number of documents in collection: %d\n", countDocs)
+	if countDocs == 0 {
+		log.Debug().Msgf("No documents found in the collection\n")
+	}
 
 	return collection, nil
 
