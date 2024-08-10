@@ -1,6 +1,6 @@
-TODO
+# TODO List
 
-[] Add Unit Tests
-[] Consider MangoDb ad vectorDb backend.
-[] Search embedding using Searchxng
-[] Overall Refactoring
+- [ ] Add Unit Tests
+- [ ] Consider MongoDB as a vectorDB backend.
+- [ ] Search embeddings using Searching
+- [ ] Overall Refactoring
