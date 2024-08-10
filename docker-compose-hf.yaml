@@ -1,0 +1,33 @@
+services:
+  embed:
+    container_name: embed_service
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    ports:
+      - "50080:80"
+    volumes:
+      - ./data:/data
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    command: ["--model-id", "BAAI/bge-large-en-v1.5"]
+    restart: always
+  rerank:
+    container_name: rerank_service
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    ports:
+      - "50081:80"
+    volumes:
+      - ./data:/data
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    command: ["--model-id", "BAAI/bge-reranker-large"]
+    restart: always
