@@ -12,7 +12,7 @@ services:
     #       devices:
     #         - driver: nvidia
     #           count: all
-    #           capabilities: [gpu]
+    #           capabilities: [gpu] ## add gpu image for gpu support text-embeddings-inference:1.5
     command: ["--model-id", "BAAI/bge-large-en-v1.5"]
     restart: always
   rerank:
