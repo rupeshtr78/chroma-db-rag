@@ -14,9 +14,6 @@ import (
 var log = logger.Log
 
 // InitializeClient initializes the Chroma client and sets the tenant and database.
-// Creates a new collection with the given name, embedding function and distance function.
-// Creates a new record set.
-// Returns the collection and record set. // TODO refactor doing too much
 func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, databaseName string) (*chromago.Client, error) {
 	// Initialize the chroma client
 	client, err := chromaclient.GetChromaClient(ctx, constants.ChromaUrl)
@@ -53,6 +50,7 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 
 }
 
+// GetCollectionRecordSet creates a new collection with the given name, embedding function and distance function.
 func GetCollectionRecordSet(ctx context.Context, client *chromago.Client, embbedder constants.Embedder, embeddingModel string) (*chromago.Collection, *types.RecordSet, error) {
 	// Get Embedding either HuggingFace or Ollama
 	em := embedders.NewEmbeddingManager(embbedder, constants.HuggingFaceTeiUrl, embeddingModel)
