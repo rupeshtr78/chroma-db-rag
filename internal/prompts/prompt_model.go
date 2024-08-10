@@ -17,6 +17,7 @@ type PromptData struct {
 	Prompt       string
 }
 
+// GetTemplate generates a prompt using the provided system prompt, prompt, and content
 func GetTemplate(sytemPromptFile string, prompt string, content string) (string, error) {
 
 	// Load the template from the file

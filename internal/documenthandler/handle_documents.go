@@ -17,6 +17,7 @@ type DocumentLoader interface {
 	LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error)
 }
 
+// NewDocumentLoader returns a new DocumentLoader based on the docType
 func NewDocumentLoader(docType constants.DocType) DocumentLoader {
 	switch docType {
 	case constants.PDF:
@@ -30,6 +31,7 @@ func NewDocumentLoader(docType constants.DocType) DocumentLoader {
 
 type TextLoader struct{}
 
+// LoadDocument loads the text data from the given file path
 func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -72,6 +74,7 @@ func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]strin
 
 type PdfLoader struct{}
 
+// LoadDocument loads the text data from the given pdf file path / TODO - add metadata fix issues with split
 func (p *PdfLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
 	pdfStrings := []string{}
 	metadata := constants.Metadata{}

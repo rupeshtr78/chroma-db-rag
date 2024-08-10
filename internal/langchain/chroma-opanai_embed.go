@@ -1,3 +1,4 @@
+// POC use Chroma with OpenAI to create a collection and query it
 package langchain
 
 import (

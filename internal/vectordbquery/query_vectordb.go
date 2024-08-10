@@ -25,6 +25,7 @@ type CollectionQuery struct {
 
 var log = logger.Log
 
+// QueryVectorDb queries the vector database with the given query text // TODO: Add more details
 func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTexts []string) (*chromago.QueryResults, error) {
 	// Query the collection
 	qr, qrerr := collection.Query(ctx,
@@ -51,6 +52,7 @@ func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTe
 	return qr, nil
 }
 
+// QueryVectorDbWithOptions queries the vector database with the given query text and options
 func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (string, error) {
 	// // TODO Remove added for Poc for embedding query
 	// embed := &types.Embedding{

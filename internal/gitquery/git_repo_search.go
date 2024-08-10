@@ -1,4 +1,5 @@
 // POC to search for repositories on GitHub using the GitHub API embed in the query vector db
+// mAy be add automated PR review?
 package gitquery
 
 import (

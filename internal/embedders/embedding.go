@@ -13,6 +13,7 @@ type EmbeddingManager interface {
 	GetEmbeddingFunction() (types.EmbeddingFunction, error)
 }
 
+// NewEmbeddingManager returns a new EmbeddingManager based on the embedder
 func NewEmbeddingManager(embedder constants.Embedder, baseurl string, model string) EmbeddingManager {
 	switch embedder {
 	case constants.HuggingFace:
