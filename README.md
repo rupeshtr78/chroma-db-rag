@@ -27,7 +27,7 @@ This repository demonstrates how to  combine embedding and reranking to develop 
 
 1. **Set Up Vector Database**:
    - Use Chroma DB to store your document embeddings.
-   - Support for Ollama embedding models and Hugging Face [Tei]([text](https://huggingface.co/docs/text-embeddings-inference/en/index)).
+   - Support for Ollama embedding models and Hugging Face [Tei](https://huggingface.co/docs/text-embeddings-inference/en/index).
 
 2. **Preprocess Documents**:
    - Split your documents into manageable chunks.
@@ -41,7 +41,7 @@ This repository demonstrates how to  combine embedding and reranking to develop 
      - Generate an embedding for the query.
      - Perform a similarity search within the vector database to identify the most relevant chunks based on their embeddings.
      - Retrieve these chunks as context for your query.
-     - Rerank the results using Hugging Face [Reranker]([text](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour#re-rankers))
+     - Rerank the results using Hugging Face [Reranker](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour#re-rankers)
 
 5. **Integrate Ollama**:
    - Connect Ollama with the Chroma DB to facilitate the retrieval of relevant context.
