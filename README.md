@@ -1,11 +1,33 @@
 # Chroma DB and Ollama Embedding Models Integration
 
-This repository demonstrates the integration of Chroma DB, a vector database, with Ollama's embedding models to implement a Retrieval Augmented Generation (RAG) system.
+**Repository Overview**
+
+This repository demonstrates the integration of Chroma DB, a vector database, with embedding models to develop a robust Retrieval Augmented Generation (RAG) system. 
+
+**Embedding Model Options**
+
+
+1. **Ollama Embedding Model**: 
+2. **Hugging Face Text Embedder**:
+
+**Re-ranker Integration**
+
+To enhance the accuracy of RAG, we can incorporate HuggingFace Re-rankers models. These models evaluate the similarity between a query and a text passage, ensuring that retrieved information is relevant and contextually accurate.
+
+```bash
+Example:
+query := "What is Deep Learning?"
+retrievedResults := []string{"Tomatos are fruits...", "Deep Learning is not...", "Deep learning is..."}
+Response: [{"index":2,"score":0.9987814},{"index":1,"score":0.022949383},{"index":0,"score":0.000076250595}]
+```
+
+This repository demonstrates how to  combine embedding and reranking to develop a RAG system. 
 
 ## Steps followed to Implement this RAG System
 
 1. **Set Up Vector Database**:
    - Use Chroma DB to store your document embeddings.
+   - Support for Ollama embedding models and Hugging Face [Tei]([text](https://huggingface.co/docs/text-embeddings-inference/en/index)).
 
 2. **Preprocess Documents**:
    - Split your documents into manageable chunks.
@@ -19,6 +41,7 @@ This repository demonstrates the integration of Chroma DB, a vector database, wi
      - Generate an embedding for the query.
      - Perform a similarity search within the vector database to identify the most relevant chunks based on their embeddings.
      - Retrieve these chunks as context for your query.
+     - Rerank the results using Hugging Face [Reranker]([text](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour#re-rankers))
 
 5. **Integrate Ollama**:
    - Connect Ollama with the Chroma DB to facilitate the retrieval of relevant context.

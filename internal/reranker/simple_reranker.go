@@ -1,3 +1,4 @@
+// POC to rerank results based on distance
 package reranker
 
 import (

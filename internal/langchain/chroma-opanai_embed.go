@@ -80,7 +80,7 @@ func addRecords(rs *types.RecordSet, ctx context.Context, newCollection *chroma.
 	rs.WithRecord(types.WithDocument("My name is Jane. I am a data scientist."), types.WithMetadata("key2", "value2"))
 
 	// Add the records to the collection
-	_, err := newCollection.AddRecords(context.Background(), rs)
+	_, err := newCollection.AddRecords(ctx, rs)
 	if err != nil {
 		log.Default().Printf("Error adding records: %s\n", err)
 		return err

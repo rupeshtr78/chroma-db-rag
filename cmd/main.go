@@ -20,7 +20,7 @@ var log = logger.Log
 
 func main() {
 	ctx := context.Background()
-	// sometimes timeout happens while model is running on remote server then use cancel context
+	// sometimes timeout happens while model is running on remote server switching to cancel context //TODO
 	// ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -86,9 +86,10 @@ func main() {
 
 	}
 
-	// log.Info().Msgf("Final Prompt: %s", s)
+	log.Info().Msgf("Final Prompt: %v", prompts)
 
 	chat.ChatOllama(ctx, prompts)
+
 }
 
 // stripStopWords removes the stop words from the text and returns a slice of words

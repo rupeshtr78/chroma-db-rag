@@ -3,6 +3,7 @@ package vectordb
 import (
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
+	"chroma-db/internal/embedders"
 	ollamamodel "chroma-db/internal/ollama"
 	"chroma-db/pkg/logger"
 	"context"
@@ -46,15 +47,25 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 	log.Debug().Msgf("Client Tenant: %v\n", client.Tenant)
 	log.Debug().Msgf("Client Database: %v\n", client.Database)
 
-	// Get the ollama embedding function
+	// Get the ollama embedding function // TODO abstract out to support hf embedding function delete after refactor
 	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbeddingFn(constants.OllamaUrl, embeddingModel)
 	if err != nil {
 		log.Debug().Msgf("Error getting ollama embedding function: %v\n", err)
 		return nil, nil, err
 	}
+	_ = ollamaEmbedFn
+
+	// Get Embedding Manager either HuggingFace or Ollama
+	em := embedders.NewEmbeddingManager(constants.HuggingFace, constants.HuggingFaceTeiUrl, constants.HuggingFaceEmbedModel)
+
+	hfef, err := em.GetEmbeddingFunction()
+	if err != nil {
+		log.Debug().Msgf("Error getting hugging face embedding function: %v\n", err)
+		return nil, nil, err
+	}
 
 	// delete the collection if it exists
-	err = chromaclient.DeleteCollectionIfExists(ctx, constants.Collection, client, ollamaEmbedFn)
+	err = chromaclient.DeleteCollectionIfExists(ctx, constants.Collection, client, hfef)
 	if err != nil {
 		log.Debug().Msgf("Error deleting collection: %v\n", err)
 		return nil, nil, err
@@ -63,7 +74,7 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 	// Create a new collection with the given name client tenant and database
 	collection, err := chromaclient.GetOrCreateCollection(ctx, client,
 		constants.Collection,
-		ollamaEmbedFn,
+		hfef,
 		constants.DistanceFn)
 	if err != nil {
 		log.Debug().Msgf("Error getting or creating collection: %v\n", constants.Collection)
@@ -71,7 +82,7 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 	}
 
 	// Create a new record set
-	recordSet, err := chromaclient.CreateRecordSet(ollamaEmbedFn)
+	recordSet, err := chromaclient.CreateRecordSet(hfef)
 	if err != nil {
 		log.Debug().Msgf("Error creating record set: %v\n", err)
 		return nil, nil, err

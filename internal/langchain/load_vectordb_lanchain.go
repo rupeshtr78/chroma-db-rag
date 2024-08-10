@@ -9,6 +9,7 @@ import (
 
 	"github.com/amikos-tech/chroma-go/types"
 	"github.com/rs/zerolog/log"
+	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/vectorstores"
 )
 
@@ -42,7 +43,7 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 	client.SetDatabase(constants.Database)
 
 	// Get the ollama embedding function
-	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbedder(constants.OllamaUrl, constants.OllamaEmbdedModel)
+	ollamaEmbedFn, err := GetOllamaEmbedder(constants.OllamaUrl, constants.OllamaEmbdedModel)
 	if err != nil {
 		log.Debug().Msgf("Error getting ollama embedding function: %v\n", err)
 		return "", err
@@ -149,3 +150,19 @@ func QueryVectorDatabase(ctx context.Context, queryString string) (string, error
 
 // vectorResults := `mirostat_tau Controls the balance between coherence and diversity of the output.
 // A lower value will result in more focused and coherent text. (Default: 5.0)`
+
+// GetOllamaEmbedder returns a new Ollama Embedder using langchain-go
+func GetOllamaEmbedder(ollamaUrl string, model string) (embeddings.Embedder, error) {
+
+	ollamaLLM, err := ollamamodel.GetOllamaModel(ollamaUrl, model)
+	if err != nil {
+		return nil, err
+	}
+
+	ollamaEmbedder, err := embeddings.NewEmbedder(ollamaLLM)
+	if err != nil {
+		return nil, err
+	}
+
+	return ollamaEmbedder, nil
+}

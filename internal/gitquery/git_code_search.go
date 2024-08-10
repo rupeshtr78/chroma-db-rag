@@ -1,3 +1,4 @@
+// POC to search for code on GitHub using the GitHub API embed in the query vector db
 package gitquery
 
 import (
