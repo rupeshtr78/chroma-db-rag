@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/amikos-tech/chroma-go v0.1.4
+	github.com/bbalet/stopwords v1.0.0
 	github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80
 	github.com/rs/zerolog v1.31.0
 	github.com/tmc/langchaingo v0.1.12
@@ -15,7 +16,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bbalet/stopwords v1.0.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect

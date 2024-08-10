@@ -1,4 +1,4 @@
-package documents
+package documenthandler
 
 import (
 	"chroma-db/internal/constants"

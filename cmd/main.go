@@ -5,7 +5,7 @@ import (
 	"chroma-db/app/ollamarag"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/prompts"
-	"chroma-db/internal/queryvectordb"
+	"chroma-db/internal/vectordbquery"
 	"chroma-db/pkg/logger"
 	"context"
 	"fmt"
@@ -65,7 +65,7 @@ func main() {
 		wg.Add(1)
 		go func(c context.Context, collection *chromago.Collection, query []string) {
 			defer wg.Done()
-			vectorResults, err := queryvectordb.QueryVectorDbWithOptions(ctx, collection, query)
+			vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
 			if err != nil {
 				errChan <- err
 				log.Error().Msgf("Failed to query vector db: %v", err)

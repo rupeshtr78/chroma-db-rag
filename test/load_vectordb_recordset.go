@@ -3,7 +3,7 @@ package test
 import (
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
-	"chroma-db/internal/documents"
+	"chroma-db/internal/documenthandler"
 	ollamamodel "chroma-db/internal/ollama"
 	"context"
 
@@ -73,7 +73,7 @@ func LoadDataToVectorDB(ctx context.Context, docPath string) (*chromago.Collecti
 
 	// Load text from a file
 	docType := constants.TXT
-	docLoader := documents.NewDocumentLoader(docType)
+	docLoader := documenthandler.NewDocumentLoader(docType)
 
 	docs, metadata, err := docLoader.LoadDocument(ctx, docPath)
 

@@ -1,4 +1,4 @@
-package queryvectordb
+package vectordbquery
 
 import (
 	"chroma-db/pkg/logger"

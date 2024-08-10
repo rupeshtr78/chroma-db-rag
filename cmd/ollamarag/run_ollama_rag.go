@@ -4,7 +4,7 @@ import (
 	"chroma-db/app/ollamarag"
 	"chroma-db/app/vectordb"
 	"chroma-db/internal/constants"
-	"chroma-db/internal/documents"
+	"chroma-db/internal/documenthandler"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -94,7 +94,7 @@ func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collectio
 		return nil, err
 	}
 
-	docLoader := documents.NewDocumentLoader(opts.DocType)
+	docLoader := documenthandler.NewDocumentLoader(opts.DocType)
 
 	docs, metadata, err := docLoader.LoadDocument(ctx, opts.DocPath)
 	// Load the documents
