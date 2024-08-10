@@ -26,24 +26,27 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 		return nil, nil, err
 	}
 
-	// Get or create the tenant
-	t, err := chromaclient.GetOrCreateTenant(ctx, client, constants.TenantName)
+	// // Get or create the tenant
+	_, err = chromaclient.GetOrCreateTenant(ctx, client, constants.TenantName)
 	if err != nil {
 		log.Debug().Msgf("Error getting or creating tenant: %v\n", err)
 		return nil, nil, err
 	}
 
 	// Set the tenant for the client
-	client.SetTenant(*t.Name)
+	client.SetTenant(constants.TenantName)
 
-	// Get or create the database
-	_, err = chromaclient.GetOrCreateDatabase(ctx, client, constants.Database, t.Name)
+	// // Get or create the database
+	_, err = chromaclient.GetOrCreateDatabase(ctx, client, constants.Database, &constants.TenantName)
 	if err != nil {
 		log.Debug().Msgf("Error getting or creating database: %v\n", err)
 		return nil, nil, err
 	}
 
+	// Set the database for the client
 	client.SetDatabase(constants.Database)
+
+	// client.SetDatabase(constants.Database)
 	log.Debug().Msgf("Client Tenant: %v\n", client.Tenant)
 	log.Debug().Msgf("Client Database: %v\n", client.Database)
 

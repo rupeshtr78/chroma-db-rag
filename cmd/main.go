@@ -86,7 +86,7 @@ func main() {
 
 	}
 
-	log.Info().Msgf("Final Prompt: %v", prompts)
+	log.Debug().Msgf("Final Prompt: %v", prompts)
 
 	chat.ChatOllama(ctx, prompts)
 

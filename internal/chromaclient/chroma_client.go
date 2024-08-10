@@ -16,7 +16,11 @@ var log = logger.Log
 func GetChromaClient(ctx context.Context, url string) (*chromago.Client, error) {
 	// Create a new client with url
 	chromaClient, err := chromago.NewClient(
-		url)
+		url,
+		chromago.WithDebug(true),
+		chromago.WithTenant(constants.TenantName),
+		chromago.WithDatabase(constants.Database),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +34,12 @@ func GetChromaClient(ctx context.Context, url string) (*chromago.Client, error) 
 }
 
 // GetChromaClient creates a new **chromago.Client** with tenant and database
-func GetChromaClientWithOptions(ctx context.Context, url string) (*chromago.Client, error) {
+func GetChromaClientWithOptions(ctx context.Context, url string, tenant string, database string) (*chromago.Client, error) {
 	// Create a new client with options
 	chromaClient, err := chromago.NewClient(
 		url,
-		chromago.WithTenant(constants.TenantName),
-		chromago.WithDatabase(constants.Database),
+		chromago.WithTenant(tenant),
+		chromago.WithDatabase(database),
 		chromago.WithDebug(true),
 		// chromago.WithDefaultHeaders(map[string]string{"Authorization": "Bearer my token"}),
 		// chromago.WithSSLCert("path/to/cert.pem"),
@@ -53,18 +57,23 @@ func GetChromaClientWithOptions(ctx context.Context, url string) (*chromago.Clie
 
 // GetOrCreateTenant creates a new **openapi.Tenant** if it does not exist
 func GetOrCreateTenant(ctx context.Context, client *chromago.Client, tenantName string) (*chromaAPI.Tenant, error) {
-
-	if t, err := client.GetTenant(ctx, tenantName); err == nil {
+	// Get the tenant
+	tenant, res, err := client.ApiClient.DefaultApi.GetTenant(ctx, tenantName).Execute()
+	if err != nil || res.StatusCode != 200 {
+		log.Debug().Msgf("Failed to get tenant %v\n", tenantName)
+	}
+	if tenant != nil && res.StatusCode == 200 {
 		log.Debug().Msgf("Tenant %v already exists\n", tenantName)
-		return t, nil
+		return tenant, nil
 	}
 
 	t, err := client.CreateTenant(ctx, tenantName)
-	if err != nil {
+	if err != nil || t == nil {
 		log.Debug().Msgf("Failed to create tenant %v\n", tenantName)
 		return nil, err
 	}
 	return t, nil
+
 }
 
 func GetOrCreateDatabase(ctx context.Context,
