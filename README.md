@@ -1,4 +1,4 @@
-# Chroma DB and Ollama Embedding Models Integration
+# Retrieval Augmented Generation with VectorDb, Hugging Face Embededders and Re-rankers
 
 **Repository Overview**
 
