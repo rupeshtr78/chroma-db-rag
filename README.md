@@ -12,7 +12,7 @@ This repository demonstrates the integration of Chroma DB, a vector database, wi
 
 **Re-ranker Integration**
 
-To enhance the accuracy of RAG, we can incorporate HuggingFace Re-rankers models. These models evaluate the similarity between a query and a text passage, ensuring that retrieved information is relevant and contextually accurate.
+To enhance the accuracy of RAG, we can incorporate HuggingFace Re-rankers models. These models evaluate the similarity between a query and query results retreived from vectordb, Re-Ranker rank the results by index ensuring that retrieved information is relevant and contextually accurate.
 
 ```bash
 Example:
