@@ -5,6 +5,7 @@ import (
 	"chroma-db/app/ollamarag"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/prompts"
+	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordbquery"
 	"chroma-db/pkg/logger"
 	"context"
@@ -40,19 +41,22 @@ func main() {
 			ollamarag.WithDocType(constants.TXT))
 		if err != nil {
 			errChan <- err
+			log.Error().Msgf("Failed to run OllamaRag: %v", err)
 		}
 		collectionChan <- collection
 
 	}(ctx, "test/model_params.txt", constants.TXT)
 
 	// Query the collection with the query text
-	queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	// queryString := "what is mirostat_eta?"
 	// vectorQuery := stripStopWords(queryString) // tried this option no better results
+	queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	vectorQuery := []string{queryString}
 
-	vectorChan := make(chan string, 1)
+	vectorChan := make(chan *chromago.QueryResults, 1)
+	rankChan := make(chan reranker.HfRerankResponse, 1)
 	defer close(vectorChan)
+	defer close(rankChan)
 
 	select {
 	case err := <-errChan:
@@ -72,15 +76,32 @@ func main() {
 			}
 			vectorChan <- vectorResults
 		}(ctx, collection, vectorQuery)
+	case queryResults := <-vectorChan:
+		wg.Add(1)
+		// RerankQueryResult(ctx context.Context, queryTexts string, queryResults []string)
+		go func(c context.Context, query []string, queryResults []string) {
+			defer wg.Done()
+			rerankResults, err := vectordbquery.RerankQueryResult(ctx, query, queryResults)
+			if err != nil {
+				errChan <- err
+				log.Error().Msgf("Failed to rerank query results: %v", err)
+			}
+			rankChan <- rerankResults
+		}(ctx, vectorQuery, queryResults.Documents[0])
 
 	}
 
 	// wait for all go routines to finish
 	wg.Wait()
 
+	if len(errChan) > 0 {
+		log.Error().Msgf("Error: %v", <-errChan)
+		return
+	}
+
 	// Get the vector results
-	vectorResults := <-vectorChan
-	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, vectorResults)
+	rankedResponse := <-rankChan
+	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, rankedResponse.Text)
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
 
