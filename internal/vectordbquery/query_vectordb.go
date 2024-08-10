@@ -1,9 +1,12 @@
 package vectordbquery
 
 import (
+	"chroma-db/internal/constants"
+	"chroma-db/internal/reranker"
 	"chroma-db/pkg/logger"
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -22,7 +25,7 @@ type CollectionQuery struct {
 
 var log = logger.Log
 
-func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTexts []string) (string, error) {
+func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTexts []string) (*chromago.QueryResults, error) {
 	// Query the collection
 	qr, qrerr := collection.Query(ctx,
 		queryTexts,
@@ -33,15 +36,19 @@ func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTe
 
 	if qrerr != nil {
 		log.Debug().Msgf("Error querying collection: %s \n", qrerr)
-		return "", qrerr
+		return nil, qrerr
 	}
-	fmt.Printf("qr: %v\n", qr.Documents[0][0]) //this should result in the document about dogs
-	log.Info().Msgf("Query Distance: %v\n", qr.Distances)
-	log.Info().Msgf("Query Metadata: %v\n", qr.Metadatas)
 
-	queryResults := qr.Documents[0][0]
+	numResults := len(qr.Documents[0])
+	if numResults == 0 {
+		return nil, fmt.Errorf("no results found for query: %v", queryTexts)
+	}
 
-	return queryResults, nil
+	log.Debug().Msgf("Query Results Length: %v\n", numResults)
+	log.Debug().Msgf("Query Distance: %v\n", qr.Distances)
+	log.Debug().Msgf("Query Metadata: %v\n", qr.Metadatas)
+
+	return qr, nil
 }
 
 func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (string, error) {
@@ -70,7 +77,7 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	options := []types.CollectionQueryOption{
 		// types.WithQueryTexts(queryTexts),
 		types.WithQueryText(str.String()),
-		types.WithNResults(2), // add more results need testing
+		types.WithNResults(5), // add more results need testing
 		// types.WithOffset(10),
 		types.WithQueryEmbeddings(queryEmbedder),
 	}
@@ -83,34 +90,48 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 
 	numResults := len(qr.Documents[0])
 	log.Debug().Msgf("Query Results Length: %v\n", numResults)
-
-	fmt.Printf("qr: %v\n", qr.Documents[0][1])
 	log.Info().Msgf("Query Distance: %v\n", qr.Distances)
 	log.Info().Msgf("Query Metadata: %v\n", qr.Metadatas)
 
+	docs := qr.Documents[0]
+	rerankIndex, err := RerankQueryResult(ctx, str.String(), docs)
+	if err != nil {
+		log.Error().Msgf("Error reranking query results: %v\n", err)
+	}
+	index := rerankIndex.Index
 	// TODO may be add reranking logic here
 	// assuming smaller distance is better pick the first result qr.Documents[0][0]
-	// trying to get the second result qr.Documents[0][1] better results
+	// adding the second result qr.Documents[0][1] better results
 	// concatenate the results qr.Documents[0][0] and qr.Documents[0][1]
 	// For specific query results with lowest distance is better qr.Documents[0][0]
 	// When asked general questions, trying concatenating the results for now
-	queryResults := qr.Documents[0][1] + qr.Documents[0][0]
+	// queryResults := qr.Documents[0][1] + qr.Documents[0][0]
+	queryResults := qr.Documents[0][index]
 	return queryResults, nil
 }
 
-// TODO: Implement this function
-func RerankQueryResult() {
-	// queryRerank := &reranker.SimpleReranker{}
+// RerankQueryResult reranks the query results using the HuggingFace reranker
+// TODO: Use GRPC https://github.com/huggingface/text-embeddings-inference?tab=readme-ov-file#grpc
+func RerankQueryResult(ctx context.Context, queryTexts string, queryResults []string) (reranker.HfRerankResponse, error) {
 
-	// rankedResults, err := queryRerank.Rerank(ctx, "", qr)
-	// if err != nil {
-	// 	fmt.Println("Error in reranking:", err)
-	// 	return "", err
-	// }
+	request := &reranker.HfRerankRequest{
+		Query:     queryTexts,
+		Texts:     queryResults,
+		RawScores: true,
+	}
 
-	// rankedResults, err := queryRerank.RerankResults(ctx, qr)
-	// if err != nil {
-	// 	log.Debug().Msgf("Error reranking query results: %s \n", err)
-	// 	return "", err
-	// }
+	client := &reranker.HfRerankClient{
+		Client:  &http.Client{},
+		BaseURL: constants.HuggingFaceRerankUrl,
+		Model:   constants.HuggingFaceRerankModel,
+	}
+
+	res, err := client.CreateRerankingRequest(ctx, request)
+	if err != nil {
+		log.Error().Msgf("Error reranking query results: %v\n", err)
+	}
+
+	log.Info().Msgf("Reranked Results: %v\n", res)
+	// For now return the first result
+	return res[0], nil
 }

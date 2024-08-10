@@ -49,9 +49,6 @@ func GetTemplate(sytemPromptFile string, prompt string, content string) (string,
 	// Get the final prompt string
 	finalPrompt := buf.String()
 
-	// fmt.Println("Final Prompt:", finalPrompt)
-	log.Debug().Msgf("Final Prompt: %s", finalPrompt)
-
 	// Send the final prompt to Ollama for processing
 	return finalPrompt, err
 }
