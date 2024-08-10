@@ -4,7 +4,6 @@ import (
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/embedders"
-	ollamamodel "chroma-db/internal/ollama"
 	"chroma-db/pkg/logger"
 	"context"
 
@@ -17,20 +16,20 @@ var log = logger.Log
 // InitializeClient initializes the Chroma client and sets the tenant and database.
 // Creates a new collection with the given name, embedding function and distance function.
 // Creates a new record set.
-// Returns the collection and record set.
-func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, databaseName string, embeddingModel string) (*chromago.Collection, *types.RecordSet, error) {
+// Returns the collection and record set. // TODO refactor doing too much
+func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, databaseName string) (*chromago.Client, error) {
 	// Initialize the chroma client
 	client, err := chromaclient.GetChromaClient(ctx, constants.ChromaUrl)
 	if err != nil {
 		log.Debug().Msgf("Error getting chroma client: %v\n", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// // Get or create the tenant
 	_, err = chromaclient.GetOrCreateTenant(ctx, client, constants.TenantName)
 	if err != nil {
 		log.Debug().Msgf("Error getting or creating tenant: %v\n", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Set the tenant for the client
@@ -40,7 +39,7 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 	_, err = chromaclient.GetOrCreateDatabase(ctx, client, constants.Database, &constants.TenantName)
 	if err != nil {
 		log.Debug().Msgf("Error getting or creating database: %v\n", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Set the database for the client
@@ -50,16 +49,13 @@ func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, 
 	log.Debug().Msgf("Client Tenant: %v\n", client.Tenant)
 	log.Debug().Msgf("Client Database: %v\n", client.Database)
 
-	// Get the ollama embedding function // TODO abstract out to support hf embedding function delete after refactor
-	ollamaEmbedFn, err := ollamamodel.GetOllamaEmbeddingFn(constants.OllamaUrl, embeddingModel)
-	if err != nil {
-		log.Debug().Msgf("Error getting ollama embedding function: %v\n", err)
-		return nil, nil, err
-	}
-	_ = ollamaEmbedFn
+	return client, nil
 
-	// Get Embedding Manager either HuggingFace or Ollama
-	em := embedders.NewEmbeddingManager(constants.HuggingFace, constants.HuggingFaceTeiUrl, constants.HuggingFaceEmbedModel)
+}
+
+func GetCollectionRecordSet(ctx context.Context, client *chromago.Client, embbedder constants.Embedder, embeddingModel string) (*chromago.Collection, *types.RecordSet, error) {
+	// Get Embedding either HuggingFace or Ollama
+	em := embedders.NewEmbeddingManager(embbedder, constants.HuggingFaceTeiUrl, embeddingModel)
 
 	hfef, err := em.GetEmbeddingFunction()
 	if err != nil {

@@ -86,9 +86,14 @@ func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collectio
 	}
 
 	// Initialize the Chroma client
-	collection, recordSet, err := vectordb.InitializeChroma(ctx, opts.ChromaURL, opts.TenantName, opts.DatabaseName, opts.EmbeddingModel)
+	client, err := vectordb.InitializeChroma(ctx, opts.ChromaURL, opts.TenantName, opts.DatabaseName)
 	if err != nil {
 		log.Debug().Msgf("Error initializing Chroma: %v\n", err)
+		return nil, err
+	}
+	collection, recordSet, err := vectordb.GetCollectionRecordSet(ctx, client, constants.HuggingFace, opts.EmbeddingModel)
+	if err != nil {
+		log.Debug().Msgf("Error creating collection and recordset: %v\n", err)
 		return nil, err
 	}
 
