@@ -23,10 +23,9 @@ type HfRerankClient struct {
 }
 
 type HfRerankRequest struct {
-	Query       string   `json:"query"`
-	Texts       []string `json:"texts"`
-	RawScores   bool     `json:"raw_scores"`
-	ReturnTexts bool     `json:"return_texts"`
+	Query     string   `json:"query"`
+	Texts     []string `json:"texts"`
+	RawScores bool     `json:"raw_scores"`
 }
 
 func (c *HfRerankRequest) JSON() (string, error) {
@@ -37,10 +36,9 @@ func (c *HfRerankRequest) JSON() (string, error) {
 	return string(data), nil
 }
 
-// [{"index":2,"text":"Deep learning is...","score":0.9987814}
+// [{"index":1,"score":0.9987814},{"index":0,"score":0.022949383}]%
 type HfRerankResponse struct {
 	Index int     `json:"index"`
-	Text  string  `json:"text"`
 	Score float64 `json:"score"`
 }
 
