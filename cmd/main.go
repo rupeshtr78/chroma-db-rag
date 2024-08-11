@@ -3,18 +3,17 @@ package main
 import (
 	"chroma-db/app/chat"
 	"chroma-db/app/ollamarag"
+	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
+	"chroma-db/internal/embedders"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordbquery"
 	"chroma-db/pkg/logger"
 	"context"
-	"fmt"
-	"strings"
 	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	"github.com/bbalet/stopwords"
 )
 
 var log = logger.Log
@@ -107,26 +106,33 @@ func main() {
 
 }
 
-// stripStopWords removes the stop words from the text and returns a slice of words
-func stripStopWords(text string) []string {
-	langCode := "en"
-
-	// remove stopwords
-	cleanContent := stopwords.CleanString(text, langCode, true)
-	fmt.Println(cleanContent)
-
-	// convert to slice of words
-	result := make([]string, 0)
-	// split the text into words and trim the spaces
-	for _, word := range strings.Split(cleanContent, " ") {
-		trimmedWord := strings.TrimSpace(word)
-		// remove extra spaces
-		if len(trimmedWord) > 0 {
-			result = append(result, trimmedWord)
-		}
+func LoadData(ctx context.Context, path string, docType constants.DocType) (*chromago.Collection, error) {
+	collection, err := ollamarag.RunOllamaRagV2(ctx,
+		ollamarag.WithDocPath(path),
+		ollamarag.WithDocType(docType))
+	if err != nil {
+		return nil, err
 	}
+	return collection, nil
+}
 
-	log.Debug().Msgf("Vector Query Strings: %v", result)
+func QueryCollection(ctx context.Context, client *chromago.Client, collection string, query []string) (*chromago.QueryResults, error) {
+	// Get Embedding either HuggingFace or Ollama
+	em := embedders.NewEmbeddingManager(constants.HuggingFace, constants.HuggingFaceTeiUrl, constants.HuggingFaceEmbedModel)
 
-	return result
+	hfef, err := em.GetEmbeddingFunction()
+	if err != nil {
+		log.Debug().Msgf("Error getting hugging face embedding function: %v\n", err)
+		return nil, err
+	}
+	c, err := chromaclient.GetCollection(ctx, client, constants.HuggingFaceEmbedModel, hfef)
+	if err != nil {
+		log.Debug().Msgf("Error getting collection: %v\n", err)
+		return nil, err
+	}
+	return vectordbquery.QueryVectorDbWithOptions(ctx, c, query)
+}
+
+func RerankQueryResults(ctx context.Context, query []string, queryResults *chromago.QueryResults) (*reranker.HfRerankResponse, error) {
+	return vectordbquery.RerankQueryResult(ctx, query, queryResults.Documents[0])
 }

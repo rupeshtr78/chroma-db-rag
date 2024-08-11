@@ -59,3 +59,21 @@ func DeleteCollectionIfExists(ctx context.Context, collectionName string, client
 
 	return nil
 }
+
+func GetCollection(ctx context.Context,
+	client *chromago.Client,
+	collectionName string,
+	embeddingFunction types.EmbeddingFunction) (*chromago.Collection, error) {
+
+	// Create a new collection with options
+	collection, err := client.GetCollection(ctx, collectionName, embeddingFunction)
+	if err != nil {
+		log.Err(err).Msg("error creating collection")
+		return nil, err
+	}
+
+	log.Debug().Msgf("Got Collection %v\n", collection.Name)
+
+	return collection, nil
+
+}
