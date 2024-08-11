@@ -4,6 +4,7 @@ import (
 	"chroma-db/internal/constants"
 	"chroma-db/pkg/logger"
 	"context"
+	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	chromaAPI "github.com/amikos-tech/chroma-go/swagger"
@@ -11,7 +12,60 @@ import (
 
 type Metadata map[string]interface{}
 
+type ChromaClient struct {
+	Client *chromago.Client
+}
+
+var chromaClient *ChromaClient
+var once sync.Once
 var log = logger.Log
+
+// GetChromaClientInstance returns a singleton instance of the ChromaClient
+func GetChromaClientInstance(ctx context.Context, url string, tenantName string, databaseName string) (*ChromaClient, error) {
+	var err error
+	once.Do(func() {
+		chromaClient = &ChromaClient{}
+		chromaClient.Client, err = InitializeChroma(ctx, url, tenantName, databaseName)
+	})
+	return chromaClient, err
+}
+
+// InitializeClient initializes the Chroma client and sets the tenant and database.
+func InitializeChroma(ctx context.Context, chromaUrl string, tenantName string, databaseName string) (*chromago.Client, error) {
+	// Initialize the chroma client
+	client, err := GetChromaClient(ctx, constants.ChromaUrl)
+	if err != nil {
+		log.Debug().Msgf("Error getting chroma client: %v\n", err)
+		return nil, err
+	}
+
+	// // Get or create the tenant
+	_, err = GetOrCreateTenant(ctx, client, constants.TenantName)
+	if err != nil {
+		log.Debug().Msgf("Error getting or creating tenant: %v\n", err)
+		return nil, err
+	}
+
+	// Set the tenant for the client
+	client.SetTenant(constants.TenantName)
+
+	// // Get or create the database
+	_, err = GetOrCreateDatabase(ctx, client, constants.Database, &constants.TenantName)
+	if err != nil {
+		log.Debug().Msgf("Error getting or creating database: %v\n", err)
+		return nil, err
+	}
+
+	// Set the database for the client
+	client.SetDatabase(constants.Database)
+
+	// client.SetDatabase(constants.Database)
+	log.Debug().Msgf("Client Tenant: %v\n", client.Tenant)
+	log.Debug().Msgf("Client Database: %v\n", client.Database)
+
+	return client, nil
+
+}
 
 func GetChromaClient(ctx context.Context, url string) (*chromago.Client, error) {
 	// Create a new client with url

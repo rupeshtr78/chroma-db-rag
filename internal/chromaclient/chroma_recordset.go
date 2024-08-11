@@ -60,37 +60,3 @@ func AddTextToRecordSet(ctx context.Context,
 
 	return rs, nil
 }
-
-func QueryRecords(ctx context.Context, collection *chromago.Collection, query []string) error {
-	// Query the collection
-	qr, qerr := collection.Query(ctx,
-		query,
-		5,
-		nil,
-		nil,
-		nil)
-
-	if qerr != nil {
-		log.Err(qerr).Msg("Error querying collection")
-		return qerr
-	}
-
-	fmt.Printf("qr: %v\n", qr.Documents[0][0]) //this should result in the document about dogs
-	return nil
-}
-
-// AddRecords adds records to the record set and collection
-// TODO fix document and metadata
-// func AddRecords(ctx context.Context, rs *types.RecordSet, collection *chromago.Collection) error {
-// 	// Add a few records to the record set
-// 	rs.WithRecord(types.WithDocument("My name is John. And I have two dogs."), types.WithMetadata("key1", "value1"))
-// 	rs.WithRecord(types.WithDocument("My name is Jane. I am a data scientist."), types.WithMetadata("key2", "value2"))
-
-// 	// Add the records to the collection
-// 	_, err := collection.AddRecords(context.Background(), rs)
-// 	if err != nil {
-// 		log.Err(err).Msg("Error adding records")
-// 		return err
-// 	}
-// 	return err
-// }

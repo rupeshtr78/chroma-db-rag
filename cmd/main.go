@@ -2,19 +2,17 @@ package main
 
 import (
 	"chroma-db/app/chat"
-	"chroma-db/app/ollamarag"
+	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
+	"chroma-db/internal/documenthandler"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordbquery"
 	"chroma-db/pkg/logger"
 	"context"
-	"fmt"
-	"strings"
 	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	"github.com/bbalet/stopwords"
 )
 
 var log = logger.Log
@@ -26,6 +24,13 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Initialize the Chroma client
+	client, err := chromaclient.GetChromaClientInstance(ctx, constants.ChromaUrl, constants.TenantName, constants.Database)
+	if err != nil {
+		log.Debug().Msgf("Error initializing Chroma: %v\n", err)
+		return
+	}
+
 	errChan := make(chan error, 1)
 	collectionChan := make(chan *chromago.Collection, 1)
 	defer close(errChan)
@@ -36,9 +41,9 @@ func main() {
 	wg.Add(1)
 	go func(ctx context.Context, path string, docType constants.DocType) {
 		defer wg.Done()
-		collection, err := ollamarag.RunOllamaRagV2(ctx,
-			ollamarag.WithDocPath(path),
-			ollamarag.WithDocType(constants.TXT))
+		collection, err := documenthandler.VectorEmbedData(ctx, client,
+			documenthandler.WithDocPath(path),
+			documenthandler.WithDocType(constants.TXT))
 		if err != nil {
 			errChan <- err
 		}
@@ -105,28 +110,4 @@ func main() {
 
 	chat.ChatOllama(ctx, prompts)
 
-}
-
-// stripStopWords removes the stop words from the text and returns a slice of words
-func stripStopWords(text string) []string {
-	langCode := "en"
-
-	// remove stopwords
-	cleanContent := stopwords.CleanString(text, langCode, true)
-	fmt.Println(cleanContent)
-
-	// convert to slice of words
-	result := make([]string, 0)
-	// split the text into words and trim the spaces
-	for _, word := range strings.Split(cleanContent, " ") {
-		trimmedWord := strings.TrimSpace(word)
-		// remove extra spaces
-		if len(trimmedWord) > 0 {
-			result = append(result, trimmedWord)
-		}
-	}
-
-	log.Debug().Msgf("Vector Query Strings: %v", result)
-
-	return result
 }
