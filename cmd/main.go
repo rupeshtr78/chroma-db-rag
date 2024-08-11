@@ -130,24 +130,3 @@ func stripStopWords(text string) []string {
 
 	return result
 }
-
-// // Get the vector results
-// vectorQueryResults := <-vectorChan
-// vectorDocs := vectorQueryResults.Documents[0]
-
-// // Get the rerank results
-// rs, err := vectordbquery.RerankQueryResult(ctx, vectorQuery, vectorDocs)
-// if err != nil {
-// 	log.Error().Msgf("Failed to rerank query results: %v", err)
-// }
-
-// // get the final prompt
-// prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, rs.Text)
-// if err != nil {
-// 	log.Error().Msgf("Failed to get template: %v", err)
-
-// }
-
-// log.Debug().Msgf("Final Prompt: %v", prompts)
-
-// chat.ChatOllama(ctx, prompts)
