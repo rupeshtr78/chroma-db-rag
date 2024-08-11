@@ -17,7 +17,7 @@ func GetChromaClient(ctx context.Context, url string) (*chromago.Client, error) 
 	// Create a new client with url
 	chromaClient, err := chromago.NewClient(
 		url,
-		chromago.WithDebug(true),
+		chromago.WithDebug(false),
 		chromago.WithTenant(constants.TenantName),
 		chromago.WithDatabase(constants.Database),
 	)
@@ -40,7 +40,7 @@ func GetChromaClientWithOptions(ctx context.Context, url string, tenant string, 
 		url,
 		chromago.WithTenant(tenant),
 		chromago.WithDatabase(database),
-		chromago.WithDebug(true),
+		chromago.WithDebug(false),
 		// chromago.WithDefaultHeaders(map[string]string{"Authorization": "Bearer my token"}),
 		// chromago.WithSSLCert("path/to/cert.pem"),
 	)
