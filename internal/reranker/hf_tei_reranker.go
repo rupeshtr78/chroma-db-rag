@@ -23,9 +23,10 @@ type HfRerankClient struct {
 }
 
 type HfRerankRequest struct {
-	Query     string   `json:"query"`
-	Texts     []string `json:"texts"`
-	RawScores bool     `json:"raw_scores"`
+	Query       string   `json:"query"`
+	Texts       []string `json:"texts"`
+	RawScores   bool     `json:"raw_scores"`
+	ReturnTexts bool     `json:"return_text"`
 }
 
 func (c *HfRerankRequest) JSON() (string, error) {
@@ -39,6 +40,7 @@ func (c *HfRerankRequest) JSON() (string, error) {
 // [{"index":1,"score":0.9987814},{"index":0,"score":0.022949383}]%
 type HfRerankResponse struct {
 	Index int     `json:"index"`
+	Text  string  `json:"text"`
 	Score float64 `json:"score"`
 }
 
@@ -48,7 +50,7 @@ type HfRerankResponse struct {
 // q := "What is Deep Learning?"
 // texts := []string{"Tomatos are fruits...", "Deep Learning is not...", "Deep learning is..."}
 // Response: [{"index":2,"score":0.9987814},{"index":1,"score":0.022949383},{"index":0,"score":0.000076250595}]
-func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRerankRequest) ([]HfRerankResponse, error) {
+func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRerankRequest) (*[]HfRerankResponse, error) {
 	reqJSON, err := req.JSON()
 	if err != nil {
 		return nil, err
@@ -98,5 +100,7 @@ func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRera
 		return nil, err
 	}
 
-	return rerankResponses, nil
+	// logger.Log.Debug().Msgf("Rerank Responses: %v\n", rerankResponses)
+
+	return &rerankResponses, nil
 }

@@ -53,15 +53,8 @@ func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTe
 }
 
 // QueryVectorDbWithOptions queries the vector database with the given query text and options
-func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (string, error) {
-	// // TODO Remove added for Poc for embedding query
-	// embed := &types.Embedding{
-	// 	ArrayOfFloat32: &[]float32{0.3, 0.4, 0.6},
-	// 	ArrayOfInt32:   &[]int32{0, 2, 4},
-	// }
-
-	// queryTexts = []string{"what is the difference between mirostat_tau and mirostat_eta?"}
-
+func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (*chromago.QueryResults, error) {
+	// Query the collection
 	str := strings.Builder{}
 	for _, text := range queryTexts {
 		str.WriteString(text)
@@ -70,7 +63,7 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	embedding, err := collection.EmbeddingFunction.EmbedQuery(ctx, str.String())
 	if err != nil {
 		log.Debug().Msgf("Error embedding query: %s \n", err)
-		return "", err
+		return nil, err
 	}
 
 	queryEmbedder := []*types.Embedding{embedding}
@@ -87,20 +80,20 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	qr, qrerr := collection.QueryWithOptions(ctx, options...)
 	if qrerr != nil {
 		log.Debug().Msgf("Error querying collection: %s \n", qrerr)
-		return "", qrerr
+		return nil, qrerr
 	}
 
 	numResults := len(qr.Documents[0])
 	log.Debug().Msgf("Query Results Length: %v\n", numResults)
-	log.Info().Msgf("Query Distance: %v\n", qr.Distances)
-	log.Info().Msgf("Query Metadata: %v\n", qr.Metadatas)
+	log.Debug().Msgf("Query Distance: %v\n", qr.Distances)
+	log.Debug().Msgf("Query Metadata: %v\n", qr.Metadatas)
 
-	docs := qr.Documents[0]
-	rerankIndex, err := RerankQueryResult(ctx, str.String(), docs)
-	if err != nil {
-		log.Error().Msgf("Error reranking query results: %v\n", err)
-	}
-	index := rerankIndex.Index
+	// docs := qr.Documents[0]
+	// rerankIndex, err := RerankQueryResult(ctx, str.String(), docs)
+	// if err != nil {
+	// 	log.Error().Msgf("Error reranking query results: %v\n", err)
+	// }
+	// index := rerankIndex.Index
 	// TODO may be add reranking logic here
 	// assuming smaller distance is better pick the first result qr.Documents[0][0]
 	// adding the second result qr.Documents[0][1] better results
@@ -108,18 +101,23 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	// For specific query results with lowest distance is better qr.Documents[0][0]
 	// When asked general questions, trying concatenating the results for now
 	// queryResults := qr.Documents[0][1] + qr.Documents[0][0]
-	queryResults := qr.Documents[0][index]
-	return queryResults, nil
+	// queryResults := qr.Documents[0][index]
+	return qr, nil
 }
 
 // RerankQueryResult reranks the query results using the HuggingFace reranker
 // TODO: Use GRPC https://github.com/huggingface/text-embeddings-inference?tab=readme-ov-file#grpc
-func RerankQueryResult(ctx context.Context, queryTexts string, queryResults []string) (reranker.HfRerankResponse, error) {
+func RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []string) (*reranker.HfRerankResponse, error) {
 
+	queryString := strings.Builder{}
+	for _, text := range queryTexts {
+		queryString.WriteString(text)
+	}
 	request := &reranker.HfRerankRequest{
-		Query:     queryTexts,
-		Texts:     queryResults,
-		RawScores: true,
+		Query:       queryString.String(),
+		Texts:       queryResults,
+		RawScores:   false,
+		ReturnTexts: true,
 	}
 
 	client := &reranker.HfRerankClient{
@@ -135,5 +133,6 @@ func RerankQueryResult(ctx context.Context, queryTexts string, queryResults []st
 
 	log.Info().Msgf("Reranked Results: %v\n", res)
 	// For now return the first result
-	return res[0], nil
+	firstResult := (*res)[0]
+	return &firstResult, nil
 }

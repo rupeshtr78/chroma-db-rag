@@ -5,6 +5,7 @@ import (
 	"chroma-db/app/ollamarag"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/prompts"
+	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordbquery"
 	"chroma-db/pkg/logger"
 	"context"
@@ -51,36 +52,50 @@ func main() {
 	// vectorQuery := stripStopWords(queryString) // tried this option no better results
 	vectorQuery := []string{queryString}
 
-	vectorChan := make(chan string, 1)
+	vectorChan := make(chan *chromago.QueryResults, 1)
+	rankChan := make(chan *reranker.HfRerankResponse, 1)
 	defer close(vectorChan)
 
-	select {
-	case err := <-errChan:
-		log.Error().Msgf("Failed to run OllamaRag: %v", err)
-		return
-	case <-ctx.Done():
-		log.Error().Msg("Timeout")
-		return
-	case collection := <-collectionChan:
-		wg.Add(1)
-		go func(c context.Context, collection *chromago.Collection, query []string) {
-			defer wg.Done()
-			vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
-			if err != nil {
-				errChan <- err
-				log.Error().Msgf("Failed to query vector db: %v", err)
-			}
-			vectorChan <- vectorResults
-		}(ctx, collection, vectorQuery)
+	wg.Add(1)
+	go func(c context.Context, query []string) {
+		defer wg.Done()
+		collection := <-collectionChan
 
-	}
+		vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
+		if err != nil {
+			errChan <- err
+			log.Error().Msgf("Failed to query vector db: %v", err)
+		}
+		vectorChan <- vectorResults
+
+	}(ctx, vectorQuery)
+
+	wg.Add(1)
+	go func(c context.Context, query []string) {
+		defer wg.Done()
+		queryResults := <-vectorChan
+		rerankResults, err := vectordbquery.RerankQueryResult(c, query, queryResults.Documents[0])
+		if err != nil {
+			errChan <- err
+			log.Error().Msgf("Failed to rerank query results: %v", err)
+		}
+		rankChan <- rerankResults
+	}(ctx, vectorQuery)
 
 	// wait for all go routines to finish
 	wg.Wait()
 
-	// Get the vector results
-	vectorResults := <-vectorChan
-	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, vectorResults)
+	// Get the final prompt and chat result
+	var rankResult *reranker.HfRerankResponse
+	select {
+	case rankResult = <-rankChan:
+	case <-ctx.Done():
+		log.Error().Msgf("Context Timeout: %v", ctx.Err())
+		return
+	}
+
+	contentString := rankResult.Text
+	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, contentString)
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
 
@@ -115,3 +130,24 @@ func stripStopWords(text string) []string {
 
 	return result
 }
+
+// // Get the vector results
+// vectorQueryResults := <-vectorChan
+// vectorDocs := vectorQueryResults.Documents[0]
+
+// // Get the rerank results
+// rs, err := vectordbquery.RerankQueryResult(ctx, vectorQuery, vectorDocs)
+// if err != nil {
+// 	log.Error().Msgf("Failed to rerank query results: %v", err)
+// }
+
+// // get the final prompt
+// prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, rs.Text)
+// if err != nil {
+// 	log.Error().Msgf("Failed to get template: %v", err)
+
+// }
+
+// log.Debug().Msgf("Final Prompt: %v", prompts)
+
+// chat.ChatOllama(ctx, prompts)
