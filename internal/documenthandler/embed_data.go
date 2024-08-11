@@ -1,9 +1,8 @@
-package ollamarag
+package documenthandler
 
 import (
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
-	"chroma-db/internal/documenthandler"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -88,7 +87,7 @@ func VectorEmbedData(ctx context.Context, client *chromaclient.ChromaClient, opt
 		return nil, err
 	}
 
-	docLoader := documenthandler.NewDocumentLoader(opts.DocType)
+	docLoader := NewDocumentLoader(opts.DocType)
 
 	docs, metadata, err := docLoader.LoadDocument(ctx, opts.DocPath)
 	// Load the documents
@@ -99,7 +98,7 @@ func VectorEmbedData(ctx context.Context, client *chromaclient.ChromaClient, opt
 	}
 
 	// Add the record set to the collection
-	collection, err = documenthandler.AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
+	collection, err = AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
 	if err != nil {
 		log.Debug().Msgf("Error adding record set to collection: %v\n", err)
 		return nil, err

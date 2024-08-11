@@ -2,9 +2,9 @@ package main
 
 import (
 	"chroma-db/app/chat"
-	"chroma-db/app/ollamarag"
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
+	"chroma-db/internal/documenthandler"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordbquery"
@@ -41,9 +41,9 @@ func main() {
 	wg.Add(1)
 	go func(ctx context.Context, path string, docType constants.DocType) {
 		defer wg.Done()
-		collection, err := ollamarag.VectorEmbedData(ctx, client,
-			ollamarag.WithDocPath(path),
-			ollamarag.WithDocType(constants.TXT))
+		collection, err := documenthandler.VectorEmbedData(ctx, client,
+			documenthandler.WithDocPath(path),
+			documenthandler.WithDocType(constants.TXT))
 		if err != nil {
 			errChan <- err
 		}
