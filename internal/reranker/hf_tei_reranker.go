@@ -37,7 +37,7 @@ func (c *HfRerankRequest) JSON() (string, error) {
 	return string(data), nil
 }
 
-// [{"index":2,"text":"Deep learning is...","score":0.9987814}
+// [{"index":1,"score":0.9987814},{"index":0,"score":0.022949383}]%
 type HfRerankResponse struct {
 	Index int     `json:"index"`
 	Text  string  `json:"text"`

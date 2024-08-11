@@ -1,2 +1,0 @@
-Given the context information and not prior knowledge.
-Generate only answers based on the user query.

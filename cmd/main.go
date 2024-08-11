@@ -41,22 +41,20 @@ func main() {
 			ollamarag.WithDocType(constants.TXT))
 		if err != nil {
 			errChan <- err
-			log.Error().Msgf("Failed to run OllamaRag: %v", err)
 		}
 		collectionChan <- collection
 
 	}(ctx, "test/model_params.txt", constants.TXT)
 
 	// Query the collection with the query text
+	queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	// queryString := "what is mirostat_eta?"
 	// vectorQuery := stripStopWords(queryString) // tried this option no better results
-	queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	vectorQuery := []string{queryString}
 
 	vectorChan := make(chan *chromago.QueryResults, 1)
 	rankChan := make(chan *reranker.HfRerankResponse, 1)
 	defer close(vectorChan)
-	defer close(rankChan)
 
 	wg.Add(1)
 	go func(c context.Context, query []string) {
