@@ -116,7 +116,7 @@ func RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []
 	request := &reranker.HfRerankRequest{
 		Query:       queryString.String(),
 		Texts:       queryResults,
-		RawScores:   true,
+		RawScores:   false,
 		ReturnTexts: true,
 	}
 

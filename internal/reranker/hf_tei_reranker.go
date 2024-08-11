@@ -26,7 +26,7 @@ type HfRerankRequest struct {
 	Query       string   `json:"query"`
 	Texts       []string `json:"texts"`
 	RawScores   bool     `json:"raw_scores"`
-	ReturnTexts bool     `json:"return_texts"`
+	ReturnTexts bool     `json:"return_text"`
 }
 
 func (c *HfRerankRequest) JSON() (string, error) {
@@ -99,6 +99,8 @@ func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRera
 	if err := json.Unmarshal(resData, &rerankResponses); err != nil {
 		return nil, err
 	}
+
+	// logger.Log.Debug().Msgf("Rerank Responses: %v\n", rerankResponses)
 
 	return &rerankResponses, nil
 }
