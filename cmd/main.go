@@ -5,7 +5,6 @@ import (
 	"chroma-db/app/ollamarag"
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
-	"chroma-db/internal/embedders"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordbquery"
@@ -25,6 +24,13 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Initialize the Chroma client
+	client, err := chromaclient.GetChromaClientInstance(ctx, constants.ChromaUrl, constants.TenantName, constants.Database)
+	if err != nil {
+		log.Debug().Msgf("Error initializing Chroma: %v\n", err)
+		return
+	}
+
 	errChan := make(chan error, 1)
 	collectionChan := make(chan *chromago.Collection, 1)
 	defer close(errChan)
@@ -35,7 +41,7 @@ func main() {
 	wg.Add(1)
 	go func(ctx context.Context, path string, docType constants.DocType) {
 		defer wg.Done()
-		collection, err := ollamarag.RunOllamaRagV2(ctx,
+		collection, err := ollamarag.VectorEmbedData(ctx, client,
 			ollamarag.WithDocPath(path),
 			ollamarag.WithDocType(constants.TXT))
 		if err != nil {
@@ -104,35 +110,4 @@ func main() {
 
 	chat.ChatOllama(ctx, prompts)
 
-}
-
-func LoadData(ctx context.Context, path string, docType constants.DocType) (*chromago.Collection, error) {
-	collection, err := ollamarag.RunOllamaRagV2(ctx,
-		ollamarag.WithDocPath(path),
-		ollamarag.WithDocType(docType))
-	if err != nil {
-		return nil, err
-	}
-	return collection, nil
-}
-
-func QueryCollection(ctx context.Context, client *chromago.Client, collection string, query []string) (*chromago.QueryResults, error) {
-	// Get Embedding either HuggingFace or Ollama
-	em := embedders.NewEmbeddingManager(constants.HuggingFace, constants.HuggingFaceTeiUrl, constants.HuggingFaceEmbedModel)
-
-	hfef, err := em.GetEmbeddingFunction()
-	if err != nil {
-		log.Debug().Msgf("Error getting hugging face embedding function: %v\n", err)
-		return nil, err
-	}
-	c, err := chromaclient.GetCollection(ctx, client, constants.HuggingFaceEmbedModel, hfef)
-	if err != nil {
-		log.Debug().Msgf("Error getting collection: %v\n", err)
-		return nil, err
-	}
-	return vectordbquery.QueryVectorDbWithOptions(ctx, c, query)
-}
-
-func RerankQueryResults(ctx context.Context, query []string, queryResults *chromago.QueryResults) (*reranker.HfRerankResponse, error) {
-	return vectordbquery.RerankQueryResult(ctx, query, queryResults.Documents[0])
 }

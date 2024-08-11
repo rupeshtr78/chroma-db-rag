@@ -1,12 +1,13 @@
 package ollamarag
 
 import (
-	"chroma-db/app/vectordb"
+	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/documenthandler"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
+	"github.com/rs/zerolog/log"
 )
 
 // Option is a type for argument options
@@ -64,12 +65,8 @@ func WithEmbeddingModel(model string) Option {
 	}
 }
 
-// RunOllamaRag runs the Ollama RAG process with the given options
-// ChromaURL:      constants.ChromaUrl,
-// TenantName:     constants.TenantName,
-// DatabaseName:   constants.Database,
-// EmbeddingModel: constants.OllamaEmbdedModel,
-func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collection, error) {
+// VectorEmbedData embeds the data in the collection
+func VectorEmbedData(ctx context.Context, client *chromaclient.ChromaClient, options ...Option) (*chromago.Collection, error) {
 	// Default options
 	opts := &ollamaRagOptions{
 		ChromaURL:      constants.ChromaUrl,
@@ -85,13 +82,7 @@ func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collectio
 		option(opts)
 	}
 
-	// Initialize the Chroma client
-	client, err := vectordb.InitializeChroma(ctx, opts.ChromaURL, opts.TenantName, opts.DatabaseName)
-	if err != nil {
-		log.Debug().Msgf("Error initializing Chroma: %v\n", err)
-		return nil, err
-	}
-	collection, recordSet, err := vectordb.GetCollectionRecordSet(ctx, client, constants.HuggingFace, opts.EmbeddingModel)
+	collection, recordSet, err := chromaclient.CreateCollectionAndRecordSet(ctx, client, constants.HuggingFace, opts.EmbeddingModel)
 	if err != nil {
 		log.Debug().Msgf("Error creating collection and recordset: %v\n", err)
 		return nil, err
@@ -108,7 +99,7 @@ func RunOllamaRagV2(ctx context.Context, options ...Option) (*chromago.Collectio
 	}
 
 	// Add the record set to the collection
-	collection, err = AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
+	collection, err = documenthandler.AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
 	if err != nil {
 		log.Debug().Msgf("Error adding record set to collection: %v\n", err)
 		return nil, err
