@@ -33,6 +33,9 @@ type TextLoader struct{}
 
 // LoadDocument loads the text data from the given file path
 func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
+	if filePath == "" {
+		return nil, nil, fmt.Errorf("TextLoaderV2: File path is empty")
+	}
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, nil, err
@@ -76,6 +79,9 @@ type PdfLoader struct{}
 
 // LoadDocument loads the text data from the given pdf file path / TODO - add metadata fix issues with split
 func (p *PdfLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
+	if filePath == "" {
+		return nil, nil, fmt.Errorf("TextLoaderV2: File path is empty")
+	}
 	pdfStrings := []string{}
 	metadata := constants.Metadata{}
 

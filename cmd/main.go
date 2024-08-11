@@ -10,6 +10,7 @@ import (
 	"chroma-db/internal/vectordbquery"
 	"chroma-db/pkg/logger"
 	"context"
+	"flag"
 	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -31,6 +32,11 @@ func main() {
 		return
 	}
 
+	// Define command-line flags
+	documentPath := flag.String("load", "", "Path to the document file to load")
+	queryString := flag.String("query", "", "Query string to run against the vector database")
+	flag.Parse() // Parse the flags
+
 	errChan := make(chan error, 1)
 	collectionChan := make(chan *chromago.Collection, 1)
 	defer close(errChan)
@@ -38,24 +44,29 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func(ctx context.Context, path string, docType constants.DocType) {
-		defer wg.Done()
-		collection, err := documenthandler.VectorEmbedData(ctx, client,
-			documenthandler.WithDocPath(path),
-			documenthandler.WithDocType(constants.TXT))
-		if err != nil {
-			errChan <- err
-		}
-		collectionChan <- collection
+	// Load the document file into the vector database
+	if documentPath != nil && *documentPath != "" {
+		wg.Add(1)
+		go func(ctx context.Context, path string, docType constants.DocType) {
+			defer wg.Done()
+			collection, err := documenthandler.VectorEmbedData(ctx, client,
+				documenthandler.WithDocPath(path),
+				documenthandler.WithDocType(constants.TXT))
+			if err != nil {
+				errChan <- err
+			}
+			collectionChan <- collection
 
-	}(ctx, "test/model_params.txt", constants.TXT)
+		}(ctx, *documentPath, constants.TXT)
+	}
 
 	// Query the collection with the query text
-	queryString := "what is the difference between mirostat_tau and mirostat_eta?"
-	// queryString := "what is mirostat_eta?"
-	// vectorQuery := stripStopWords(queryString) // tried this option no better results
-	vectorQuery := []string{queryString}
+	// queryString := "what is the difference between mirostat_tau and mirostat_eta?"
+	if queryString == nil || *queryString == "" {
+		log.Error().Msg("Query string not provided")
+		return
+	}
+	vectorQuery := []string{*queryString}
 
 	vectorChan := make(chan *chromago.QueryResults, 1)
 	rankChan := make(chan *reranker.HfRerankResponse, 1)
@@ -100,7 +111,7 @@ func main() {
 	}
 
 	contentString := rankResult.Text
-	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, contentString)
+	prompts, err := prompts.GetTemplate(constants.SystemPromptFile, *queryString, contentString)
 	if err != nil {
 		log.Error().Msgf("Failed to get template: %v", err)
 
