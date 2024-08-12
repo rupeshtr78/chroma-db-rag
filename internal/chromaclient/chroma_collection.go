@@ -2,7 +2,9 @@ package chromaclient
 
 import (
 	"chroma-db/internal/constants"
+	"chroma-db/internal/embedders"
 	"context"
+	"fmt"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/collection"
@@ -33,8 +35,10 @@ func GetOrCreateCollection(ctx context.Context,
 
 	log.Debug().Msgf("Collection %v created\n", collectionName)
 
-	return newCollection, nil
+	newCollection.Tenant = constants.TenantName
+	newCollection.Database = constants.Database
 
+	return newCollection, nil
 }
 
 func DeleteCollectionIfExists(ctx context.Context, collectionName string, client *chromago.Client, embeddingFunction types.EmbeddingFunction) error {
@@ -62,17 +66,44 @@ func DeleteCollectionIfExists(ctx context.Context, collectionName string, client
 
 func GetCollection(ctx context.Context,
 	client *chromago.Client,
-	collectionName string,
-	embeddingFunction types.EmbeddingFunction) (*chromago.Collection, error) {
+	collectionName string) (*chromago.Collection, error) {
 
-	// Create a new collection with options
-	collection, err := client.GetCollection(ctx, collectionName, embeddingFunction)
+	// List all collections Check if the collection already exist
+	collections, err := client.ListCollections(ctx)
 	if err != nil {
-		log.Err(err).Msg("error creating collection")
+		log.Debug().Msgf("Error listing collections: %v\n", err)
 		return nil, err
 	}
 
-	log.Debug().Msgf("Got Collection %v\n", collection.Name)
+	for _, c := range collections {
+		if c.Name == collectionName {
+			return c, nil
+		}
+	}
+
+	return nil, fmt.Errorf("collection %v not found", collectionName)
+
+}
+
+func GetCollectionFromDb(ctx context.Context, chromaClient *chromago.Client, embbedder constants.Embedder, embeddingModel string) (*chromago.Collection, error) {
+	// Get Embedding either HuggingFace or Ollama
+	em := embedders.NewEmbeddingManager(embbedder, constants.HuggingFaceTeiUrl, embeddingModel)
+
+	hfef, err := em.GetEmbeddingFunction()
+	if err != nil {
+		log.Debug().Msgf("Error getting hugging face embedding function: %v\n", err)
+		return nil, err
+	}
+
+	// Create a new collection with the given name client tenant and database
+	collection, err := GetOrCreateCollection(ctx, chromaClient,
+		constants.Collection,
+		hfef,
+		constants.DistanceFn)
+	if err != nil {
+		log.Debug().Msgf("Error getting or creating collection: %v\n", constants.Collection)
+		return nil, err
+	}
 
 	return collection, nil
 
