@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package tei.v1;
+
+option go_package = "internal/grpc/generated;generated";
+
+service Rerank {
+    rpc Rerank (RerankRequest) returns (RerankResponse);
+}
+
+enum TruncationDirection {
+    TRUNCATION_DIRECTION_RIGHT = 0;
+    TRUNCATION_DIRECTION_LEFT = 1;
+}
+
+message RerankRequest {
+    string query = 1;
+    repeated string texts = 2;
+    bool truncate = 3;
+    bool raw_scores = 4;
+    bool return_text = 5;
+    TruncationDirection truncation_direction = 6;
+}
+
+message Rank {
+    uint32 index = 1;
+    optional string text = 2;
+    float score = 3;
+}
+
+message Metadata {
+    uint32 compute_chars = 1;
+    uint32 compute_tokens = 2;
+    uint32 total_time_ns = 3;
+    uint32 tokenization_time_ns = 4;
+    uint32 queue_time_ns = 5;
+    uint32 inference_time_ns = 6;
+}
+
+message RerankResponse {
+    repeated Rank ranks = 1;
+    Metadata metadata = 2;
+}

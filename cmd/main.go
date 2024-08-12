@@ -31,9 +31,16 @@ func main() {
 	// Define the flags
 	loadFlag := flag.Bool("load", false, "Load and embed the data in vectordb")
 	queryFlag := flag.Bool("query", false, "Query the embedded data and rerank the results")
+	grpcFlag := flag.Bool("grpc", false, "Query the embedded data and rerank the results using gRPC")
 
 	// Parse the flags
 	flag.Parse()
+
+	if *grpcFlag {
+		query := "what is Deep Learning?"
+		texts := []string{"Tomatos are fruits..", "Deep Learning is not...", "Deep learning is..."}
+		reranker.GrpcRerank(ctx, constants.GrpcTargetServer, query, texts)
+	}
 
 	if !*loadFlag && !*queryFlag {
 		fmt.Println("Please specify a flag: -load or -query")
