@@ -1,0 +1,2 @@
+# 
+GET http://0.0.0.0:8070/api/v1/collections/?database=ollama_database-01&tenant=ollama_tenant-01
