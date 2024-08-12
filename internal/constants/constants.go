@@ -20,6 +20,7 @@ var (
 	HuggingFaceEmbedModel  string                 = "BAAI/bge-large-en-v1.5"
 	HuggingFaceRerankUrl   string                 = "http://10.0.0.213:50081/rerank"
 	HuggingFaceRerankModel string                 = "BAAI/bge-reranker-large"
+	GrpcTargetServer       string                 = "10.0.0.213:50083"
 )
 
 type Metadata map[string]interface{}
