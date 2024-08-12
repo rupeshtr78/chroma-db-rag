@@ -2,6 +2,7 @@ package chromaclient
 
 import (
 	"chroma-db/internal/constants"
+	"chroma-db/internal/embedders"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -63,10 +64,19 @@ func DeleteCollectionIfExists(ctx context.Context, collectionName string, client
 func GetCollection(ctx context.Context,
 	client *chromago.Client,
 	collectionName string,
-	embeddingFunction types.EmbeddingFunction) (*chromago.Collection, error) {
+	embbedder constants.Embedder) (*chromago.Collection, error) {
+
+	// Get Embedding either HuggingFace or Ollama
+	em := embedders.NewEmbeddingManager(embbedder, constants.HuggingFaceTeiUrl, constants.HuggingFaceEmbedModel)
+
+	hfef, err := em.GetEmbeddingFunction()
+	if err != nil {
+		log.Debug().Msgf("Error getting hugging face embedding function: %v\n", err)
+		return nil, err
+	}
 
 	// Create a new collection with options
-	collection, err := client.GetCollection(ctx, collectionName, embeddingFunction)
+	collection, err := client.GetCollection(ctx, collectionName, hfef)
 	if err != nil {
 		log.Err(err).Msg("error creating collection")
 		return nil, err

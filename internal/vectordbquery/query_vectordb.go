@@ -60,6 +60,7 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 		str.WriteString(text)
 	}
 
+	// Embed the query text
 	embedding, err := collection.EmbeddingFunction.EmbedQuery(ctx, str.String())
 	if err != nil {
 		log.Debug().Msgf("Error embedding query: %s \n", err)
