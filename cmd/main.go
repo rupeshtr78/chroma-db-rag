@@ -52,7 +52,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	var documentPath string
-	// If the load flag is set, load the data
+	// If the load flag is set, load the data // TODO: prompt collection name
 	if *loadFlag {
 		fmt.Print("Enter the path to the document file: ")
 		path, err := reader.ReadString('\n')
