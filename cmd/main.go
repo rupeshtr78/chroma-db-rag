@@ -29,8 +29,8 @@ func main() {
 	defer cancel()
 
 	// Define the flags
-	loadFlag := flag.Bool("load", false, "Load the data")
-	queryFlag := flag.Bool("query", false, "Serve the data")
+	loadFlag := flag.Bool("load", false, "Load and embed the data in vectordb")
+	queryFlag := flag.Bool("query", false, "Query the embedded data and rerank the results")
 
 	// Parse the flags
 	flag.Parse()
@@ -101,18 +101,23 @@ func main() {
 
 	}
 
-	// queryString := "what is the difference between mirostat_tau and mirostat_eta?"
 	if queryString != "" {
+		// queryString = "what is the difference between mirostat_tau and mirostat_eta?"
+		log.Debug().Msgf("Querying with: %v", queryString)
 		// Query the collection with the query text
 		vectorQuery := []string{queryString}
 		vectorChan := make(chan *chromago.QueryResults, 1)
 		rankChan := make(chan *reranker.HfRerankResponse, 1)
 		defer close(vectorChan)
 
-		c, err := chromaclient.GetCollection(ctx, client.Client, constants.Collection, constants.HuggingFace)
+		// c := <-collectionChan
+		c, err := chromaclient.GetCollectionFromDb(ctx, client.Client, constants.HuggingFace, constants.HuggingFaceEmbedModel)
 		if err != nil {
-			log.Error().Msgf("Failed to get collection: %v", err)
+			log.Debug().Msgf("Error getting collection: %v\n", err)
+			return
 		}
+
+		log.Debug().Msgf("Querying collection: %v", c.Name)
 
 		wg.Add(1)
 		go func(c context.Context, collection *chromago.Collection, query []string) {
@@ -162,14 +167,4 @@ func main() {
 		chat.ChatOllama(ctx, prompts)
 	}
 
-}
-
-func processDocument(ctx context.Context, client *chromaclient.ChromaClient, path string, docType constants.DocType, errChan chan<- error) {
-	collection, err := documenthandler.VectorEmbedData(ctx, client,
-		documenthandler.WithDocPath(path),
-		documenthandler.WithDocType(docType))
-	if err != nil {
-		errChan <- err
-	}
-	log.Debug().Msgf("Loaded data to Collection: %v", collection.Name)
 }
