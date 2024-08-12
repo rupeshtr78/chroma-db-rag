@@ -1,0 +1,17 @@
+services:
+  tei-grpc-rerank:
+    container_name: tei-grpc-rerank-service
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest-grpc
+    ports:
+      - "50083:80"
+    volumes:
+      - ./data:/data
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    command: ["--model-id", "BAAI/bge-reranker-large"]
+    restart: always
