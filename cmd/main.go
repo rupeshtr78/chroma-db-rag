@@ -36,6 +36,7 @@ func main() {
 	// Parse the flags
 	flag.Parse()
 
+	// POC need to incorporate this in the main code
 	if *grpcFlag {
 		query := "what is Deep Learning?"
 		texts := []string{"Tomatos are fruits..", "Deep Learning is not...", "Deep learning is..."}
