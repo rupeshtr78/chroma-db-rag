@@ -117,7 +117,7 @@ docker-compose up -d
 Usage 
   -load
         Load and embed the data in vectordb
-        Provide the path to file
+        Provide the path to file Eg: "test/model_params.txt"
   -query
         Query the embedded data and rerank the results
         Provide the query Eg:"what is the difference between mirostat_tau and mirostat_eta?"
