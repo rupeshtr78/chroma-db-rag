@@ -40,7 +40,12 @@ func main() {
 	if *grpcFlag {
 		query := "what is Deep Learning?"
 		texts := []string{"Tomatos are fruits..", "Deep Learning is not...", "Deep learning is..."}
-		reranker.GrpcRerank(ctx, constants.GrpcTargetServer, query, texts)
+		grpcConn, err := reranker.GetGrpcClientInstance(ctx, constants.GrpcTargetServer)
+		if err != nil {
+			log.Error().Msgf("Error initializing GrpcClient: %v\n", err)
+			return
+		}
+		reranker.GrpcRerank(ctx, grpcConn, constants.GrpcTargetServer, query, texts)
 	}
 
 	if !*loadFlag && !*queryFlag {

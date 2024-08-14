@@ -2,7 +2,7 @@ package reranker
 
 import (
 	"context"
-	"log"
+	"sync"
 
 	pb "chroma-db/internal/grpc/generated"
 	"chroma-db/pkg/logger"
@@ -11,13 +11,27 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func GrpcRerank(ctx context.Context, targetServer string, query string, texts []string) (*pb.RerankResponse, error) {
-	conn, err := grpc.NewClient(targetServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
+// Singleton GrpcClient
+type GrpcClient struct {
+	client *grpc.ClientConn
+}
 
-	c := pb.NewRerankClient(conn)
+var grpcClient *GrpcClient
+var once sync.Once
+var log = logger.Log
+
+// GetGrpcClientInstance returns a singleton instance of the GrpcClient
+func GetGrpcClientInstance(ctx context.Context, targetServer string) (*GrpcClient, error) {
+	var err error
+	once.Do(func() {
+		grpcClient = &GrpcClient{}
+		grpcClient.client, err = grpc.NewClient(targetServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	})
+	return grpcClient, err
+}
+
+func GrpcRerank(ctx context.Context, grpcConn *GrpcClient, targetServer string, query string, texts []string) (*pb.RerankResponse, error) {
+	c := pb.NewRerankClient(grpcConn.client)
 
 	req := &pb.RerankRequest{
 		Query:      query,
@@ -28,9 +42,9 @@ func GrpcRerank(ctx context.Context, targetServer string, query string, texts []
 
 	res, err := c.Rerank(ctx, req)
 	if err != nil {
-		log.Fatalf("error while calling Rerank: %v", err)
+		log.Error().Msgf("Failed to rerank: %v", err)
 	}
-	// Print the response including the text field in Rank messages
+	// get the response including the text field in Rank messages
 	for _, rank := range res.Ranks {
 		t := rank.Text
 		logger.Log.Debug().Msgf("Rank: index=%v, text=%s, score=%f", rank.Index, *t, rank.Score)
