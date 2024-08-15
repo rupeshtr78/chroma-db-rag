@@ -21,6 +21,7 @@ import (
 
 var log = logger.Log
 
+// TODO : Refactor the code to split the main function into smaller functions
 func main() {
 	ctx := context.Background()
 	// sometimes timeout happens while model is running on remote server switching to cancel context //TODO
@@ -36,16 +37,19 @@ func main() {
 	// Parse the flags
 	flag.Parse()
 
-	// POC need to incorporate this in the main code
+	// TODO : POC remove after incorporate this in the main code
 	if *grpcFlag {
-		query := "what is Deep Learning?"
+		query := []string{"what is Deep Learning?"}
 		texts := []string{"Tomatos are fruits..", "Deep Learning is not...", "Deep learning is..."}
-		grpcConn, err := reranker.GetGrpcClientInstance(ctx, constants.GrpcTargetServer)
+		grpcClient, _ := reranker.NewReRankManager(ctx, constants.GRPC)
+		result, err := grpcClient.RerankQueryResult(ctx, query, texts)
 		if err != nil {
 			log.Error().Msgf("Error initializing GrpcClient: %v\n", err)
 			return
 		}
-		reranker.GrpcRerank(ctx, grpcConn, constants.GrpcTargetServer, query, texts)
+
+		log.Debug().Msgf("Rerank Result: %v\n", result)
+
 	}
 
 	if !*loadFlag && !*queryFlag {
@@ -120,7 +124,7 @@ func main() {
 		// Query the collection with the query text
 		vectorQuery := []string{queryString}
 		vectorChan := make(chan *chromago.QueryResults, 1)
-		rankChan := make(chan *reranker.HfRerankResponse, 1)
+		rankChan := make(chan string, 1)
 		defer close(vectorChan)
 
 		// c := <-collectionChan
@@ -145,10 +149,15 @@ func main() {
 		}(ctx, c, vectorQuery)
 
 		wg.Add(1)
+		reRankClient, err := reranker.NewReRankManager(ctx, constants.GRPC)
+		if err != nil {
+			log.Error().Msgf("Error initializing ReRank Client: %v\n", err)
+			return
+		}
 		go func(c context.Context, query []string) {
 			defer wg.Done()
 			queryResults := <-vectorChan
-			rerankResults, err := vectordbquery.RerankQueryResult(c, query, queryResults.Documents[0])
+			rerankResults, err := reRankClient.RerankQueryResult(c, query, queryResults.Documents[0])
 			if err != nil {
 				errChan <- err
 				log.Error().Msgf("Failed to rerank query results: %v", err)
@@ -160,7 +169,7 @@ func main() {
 		wg.Wait()
 
 		// Get the final prompt and chat result
-		var rankResult *reranker.HfRerankResponse
+		var rankResult string
 		select {
 		case rankResult = <-rankChan:
 		case <-ctx.Done():
@@ -168,7 +177,7 @@ func main() {
 			return
 		}
 
-		contentString := rankResult.Text
+		contentString := rankResult
 		prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, contentString)
 		if err != nil {
 			log.Error().Msgf("Failed to get template: %v", err)

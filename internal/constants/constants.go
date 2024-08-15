@@ -1,6 +1,8 @@
 package constants
 
-import "github.com/amikos-tech/chroma-go/types"
+import (
+	"github.com/amikos-tech/chroma-go/types"
+)
 
 var (
 	ChromaUrl              string                 = "http://0.0.0.0:8070"
@@ -20,7 +22,10 @@ var (
 	HuggingFaceEmbedModel  string                 = "BAAI/bge-large-en-v1.5"
 	HuggingFaceRerankUrl   string                 = "http://10.0.0.213:50081/rerank"
 	HuggingFaceRerankModel string                 = "BAAI/bge-reranker-large"
-	GrpcTargetServer       string                 = "10.0.0.213:50083"
+	GrpcEmbeddingEnabled   bool                   = false
+	GrpcEmbedServer        string                 = "10.0.0.213:50083"
+	GrpcRerankEnabled      bool                   = false
+	GrpcRerankServer       string                 = "10.0.0.213:50083"
 )
 
 type Metadata map[string]interface{}
@@ -39,4 +44,13 @@ type Embedder string
 const (
 	HuggingFace Embedder = "huggingface"
 	Ollama      Embedder = "ollama"
+)
+
+type Protocol string
+
+// Supported Protocols
+const (
+	HTTP  Protocol = "http"
+	HTTPS Protocol = "https"
+	GRPC  Protocol = "grpc"
 )

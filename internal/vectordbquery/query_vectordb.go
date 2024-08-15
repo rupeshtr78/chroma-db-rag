@@ -1,12 +1,9 @@
 package vectordbquery
 
 import (
-	"chroma-db/internal/constants"
-	"chroma-db/internal/reranker"
 	"chroma-db/pkg/logger"
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -104,36 +101,4 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	// queryResults := qr.Documents[0][1] + qr.Documents[0][0]
 	// queryResults := qr.Documents[0][index]
 	return qr, nil
-}
-
-// RerankQueryResult reranks the query results using the HuggingFace reranker
-// TODO: Use GRPC https://github.com/huggingface/text-embeddings-inference?tab=readme-ov-file#grpc
-func RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []string) (*reranker.HfRerankResponse, error) {
-
-	queryString := strings.Builder{}
-	for _, text := range queryTexts {
-		queryString.WriteString(text)
-	}
-	request := &reranker.HfRerankRequest{
-		Query:       queryString.String(),
-		Texts:       queryResults,
-		RawScores:   false,
-		ReturnTexts: true,
-	}
-
-	client := &reranker.HfRerankClient{
-		Client:  &http.Client{},
-		BaseURL: constants.HuggingFaceRerankUrl,
-		Model:   constants.HuggingFaceRerankModel,
-	}
-
-	res, err := client.CreateRerankingRequest(ctx, request)
-	if err != nil {
-		log.Error().Msgf("Error reranking query results: %v\n", err)
-	}
-
-	log.Info().Msgf("Reranked Results: %v\n", res)
-	// For now return the first result
-	firstResult := (*res)[0]
-	return &firstResult, nil
 }

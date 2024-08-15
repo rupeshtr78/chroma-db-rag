@@ -2,19 +2,17 @@ package reranker
 
 import (
 	"bytes"
+	"chroma-db/internal/constants"
 	"chroma-db/pkg/logger"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
-type RerankManeger interface {
-	CreateRerankingRequest(ctx context.Context, req *HfRerankRequest) ([]HfRerankResponse, error)
-}
-
-type HfRerankClient struct {
+type HttpRerankClient struct {
 	Client         *http.Client
 	BaseURL        string
 	Model          string
@@ -22,14 +20,32 @@ type HfRerankClient struct {
 	DefaultHeaders map[string]string
 }
 
-type HfRerankRequest struct {
+var (
+	reRankClient *HttpRerankClient
+)
+
+func GetHttpRerankClient(client *http.Client, baseURL, model, apiKey string, defaultHeaders map[string]string) *HttpRerankClient {
+	once.Do(func() {
+		reRankClient = &HttpRerankClient{
+			Client:         client,
+			BaseURL:        baseURL,
+			Model:          model,
+			apiKey:         apiKey,
+			DefaultHeaders: defaultHeaders,
+		}
+	})
+
+	return reRankClient
+}
+
+type HttpRerankRequest struct {
 	Query       string   `json:"query"`
 	Texts       []string `json:"texts"`
 	RawScores   bool     `json:"raw_scores"`
 	ReturnTexts bool     `json:"return_text"`
 }
 
-func (c *HfRerankRequest) JSON() (string, error) {
+func (c *HttpRerankRequest) JSON() (string, error) {
 	data, err := json.Marshal(c)
 	if err != nil {
 		return "", err
@@ -38,7 +54,7 @@ func (c *HfRerankRequest) JSON() (string, error) {
 }
 
 // [{"index":1,"score":0.9987814},{"index":0,"score":0.022949383}]%
-type HfRerankResponse struct {
+type HttpRerankResponse struct {
 	Index int     `json:"index"`
 	Text  string  `json:"text"`
 	Score float64 `json:"score"`
@@ -50,7 +66,7 @@ type HfRerankResponse struct {
 // q := "What is Deep Learning?"
 // texts := []string{"Tomatos are fruits...", "Deep Learning is not...", "Deep learning is..."}
 // Response: [{"index":2,"score":0.9987814},{"index":1,"score":0.022949383},{"index":0,"score":0.000076250595}]
-func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRerankRequest) (*[]HfRerankResponse, error) {
+func (c *HttpRerankClient) CreateRerankingRequest(ctx context.Context, req *HttpRerankRequest) (*[]HttpRerankResponse, error) {
 	reqJSON, err := req.JSON()
 	if err != nil {
 		return nil, err
@@ -95,7 +111,7 @@ func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRera
 	resData := respBuff.Bytes()
 	logger.Log.Debug().Msgf("Response: %v\n", string(resData))
 
-	var rerankResponses []HfRerankResponse
+	var rerankResponses []HttpRerankResponse
 	if err := json.Unmarshal(resData, &rerankResponses); err != nil {
 		return nil, err
 	}
@@ -103,4 +119,37 @@ func (c *HfRerankClient) CreateRerankingRequest(ctx context.Context, req *HfRera
 	// logger.Log.Debug().Msgf("Rerank Responses: %v\n", rerankResponses)
 
 	return &rerankResponses, nil
+}
+
+// RerankQueryResult reranks the query results using the HuggingFace reranker
+// TODO: Use GRPC https://github.com/huggingface/text-embeddings-inference?tab=readme-ov-file#grpc
+func (c *HttpRerankClient) RerankQueryResult(ctx context.Context, queryTexts []string, queryResults []string) (string, error) {
+
+	queryString := strings.Builder{}
+	for _, text := range queryTexts {
+		queryString.WriteString(text)
+	}
+	request := &HttpRerankRequest{
+		Query:       queryString.String(),
+		Texts:       queryResults,
+		RawScores:   false,
+		ReturnTexts: true,
+	}
+
+	client := &HttpRerankClient{
+		Client:  &http.Client{},
+		BaseURL: constants.HuggingFaceRerankUrl,
+		Model:   constants.HuggingFaceRerankModel,
+	}
+
+	res, err := client.CreateRerankingRequest(ctx, request)
+	if err != nil {
+		log.Error().Msgf("Error reranking query results: %v\n", err)
+	}
+
+	log.Info().Msgf("Reranked Results: %v\n", res)
+	// For now return the first result
+	firstResult := (*res)[0]
+	reRankedResult := strings.TrimSpace(firstResult.Text)
+	return reRankedResult, nil
 }
