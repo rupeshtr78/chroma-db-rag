@@ -3,8 +3,11 @@ package embedders
 import (
 	"chroma-db/internal/constants"
 	"chroma-db/pkg/logger"
+	"log"
+	"os"
 
 	huggingface "github.com/amikos-tech/chroma-go/hf"
+	"github.com/amikos-tech/chroma-go/openai"
 	ollamaEmbedder "github.com/amikos-tech/chroma-go/pkg/embeddings/ollama"
 	"github.com/amikos-tech/chroma-go/types"
 )
@@ -25,6 +28,10 @@ func NewEmbeddingManager(embedder constants.Embedder, baseurl string, model stri
 		return &OllamaEmbedder{
 			BaseUrl: baseurl,
 			Model:   model,
+		}
+	case constants.OpenAI:
+		return &OpenAiEmbedder{
+			ApiKey: os.Getenv("OPENAI_API_KEY"),
 		}
 	default:
 		return nil
@@ -62,4 +69,20 @@ func (oe *OllamaEmbedder) GetEmbeddingFunction() (types.EmbeddingFunction, error
 
 	logger.Log.Debug().Msgf("Ollama Embedding Function using model: %v\n", oe.Model)
 	return embeddingFn, nil
+}
+
+type OpenAiEmbedder struct {
+	ApiKey string
+}
+
+func (o *OpenAiEmbedder) GetEmbeddingFunction() (types.EmbeddingFunction, error) {
+	// Create new OpenAI embedding function
+	apiKey := o.ApiKey
+	openaiEf, err := openai.NewOpenAIEmbeddingFunction(apiKey)
+	if err != nil {
+		log.Default().Printf("Error creating embedding function: %s \n", err)
+		return nil, err
+	}
+
+	return openaiEf, err
 }

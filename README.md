@@ -8,7 +8,8 @@ This repository demonstrates the integration of Chroma DB, a vector database, wi
 
 
 1. **Ollama Embedding Model**: 
-2. **Hugging Face Text Embedder**:
+2. **Hugging Face Text Embedder (http, grpc)**:
+3. **OpenAI Embedding Model**: 
 
 **Re-ranker Integration**
 

@@ -44,6 +44,7 @@ type Embedder string
 const (
 	HuggingFace Embedder = "huggingface"
 	Ollama      Embedder = "ollama"
+	OpenAI      Embedder = "openai"
 )
 
 type Protocol string
