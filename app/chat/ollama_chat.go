@@ -102,7 +102,7 @@ type HuggingFaceChat struct {
 }
 
 func (h *HuggingFaceChat) Chat(ctx context.Context, prompt string) {
-	fmt.Println("HuggingFaceChat")
+	fmt.Println("TODO HuggingFaceChat")
 }
 
 // handleStreamingFunc is a callback function that is called for each chunk of data returned by the model
