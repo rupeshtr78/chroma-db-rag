@@ -46,8 +46,8 @@ This repository demonstrates how to  combine embedding and reranking to develop 
 
 5. **Integrate with LLM Provider**:
    - Supported LLM Providers
-   - **Ollama**
-   - **OpenAi**
+      - **Ollama**
+      - **OpenAi**
 
 6. **Create Prompt Template**:
    - Design a prompt template that incorporates both the original query and the context retrieved from the vector database.
