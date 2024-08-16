@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-type RerankManager interface {
+type Reranker interface {
 	RerankQueryResult(context.Context, []string, []string) (string, error)
 }
 
-func NewReRankManager(ctx context.Context, protocol constants.Protocol) (RerankManager, error) {
+func NewReRanker(ctx context.Context, protocol constants.Protocol) (Reranker, error) {
 	if protocol == constants.GRPC {
 		client, err := GetGrpcRerankClient(ctx, constants.GrpcRerankServer)
 		if err != nil {
