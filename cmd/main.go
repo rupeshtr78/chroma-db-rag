@@ -135,7 +135,8 @@ func main() {
 		}
 
 		log.Debug().Msgf("Final Prompt: %v", prompts)
-		chat.ChatOllama(ctx, prompts)
+		provider := chat.NewChatManager(constants.OllamaChat, constants.OllamaChatModel, constants.OllamaUrl, "")
+		provider.Chat(ctx, prompts)
 	}
 
 }

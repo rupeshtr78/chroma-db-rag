@@ -8,10 +8,10 @@ This repository demonstrates the integration of Chroma DB, a vector database, wi
 
 
 1. **Ollama Embedding Model**: 
-2. **Hugging Face Text Embedder (http, grpc)**:
+2. **Hugging Face Text Embedder**:
 3. **OpenAI Embedding Model**: 
 
-**Re-ranker Integration**
+**Re-ranker Integration (http, grpc)**
 
 To enhance the accuracy of RAG, we can incorporate HuggingFace Re-rankers models. These models evaluate the similarity between a query and query results retreived from vectordb, Re-Ranker rank the results by index ensuring that retrieved information is relevant and contextually accurate.
 
@@ -44,14 +44,16 @@ This repository demonstrates how to  combine embedding and reranking to develop 
      - Retrieve these chunks as context for your query.
      - Rerank the results using Hugging Face [Reranker](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour#re-rankers)
 
-5. **Integrate Ollama**:
-   - Connect Ollama with the Chroma DB to facilitate the retrieval of relevant context.
+5. **Integrate with LLM Provider**:
+   - Supported LLM Providers
+   - **Ollama**
+   - **OpenAi**
 
 6. **Create Prompt Template**:
    - Design a prompt template that incorporates both the original query and the context retrieved from the vector database.
 
-7. **Process with Ollama LLM**:
-   - Send the augmented prompt, including the query and context, to the Ollama Large Language Model (LLM) for processing and generation of responses.
+7. **Process with LLM**:
+   - Send the augmented prompt, including the query and context, to the Large Language Model (LLM) for processing and generation of responses.
 
 This allows to enhance language processing tasks by leveraging the power of vector databases and advanced embedding models.
 

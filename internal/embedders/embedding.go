@@ -31,7 +31,8 @@ func NewEmbeddingManager(embedder constants.Embedder, baseurl string, model stri
 		}
 	case constants.OpenAI:
 		return &OpenAiEmbedder{
-			ApiKey: os.Getenv("OPENAI_API_KEY"),
+			ApiKey: os.Getenv(constants.OpenAIApiKey),
+			Model:  model,
 		}
 	default:
 		return nil
@@ -73,12 +74,13 @@ func (oe *OllamaEmbedder) GetEmbeddingFunction() (types.EmbeddingFunction, error
 
 type OpenAiEmbedder struct {
 	ApiKey string
+	Model  string
 }
 
 func (o *OpenAiEmbedder) GetEmbeddingFunction() (types.EmbeddingFunction, error) {
 	// Create new OpenAI embedding function
-	apiKey := o.ApiKey
-	openaiEf, err := openai.NewOpenAIEmbeddingFunction(apiKey)
+	openaiEf, err := openai.NewOpenAIEmbeddingFunction(o.ApiKey,
+		openai.WithModel(openai.EmbeddingModel(o.Model)))
 	if err != nil {
 		log.Default().Printf("Error creating embedding function: %s \n", err)
 		return nil, err
