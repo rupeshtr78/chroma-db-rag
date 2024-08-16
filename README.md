@@ -42,7 +42,7 @@ This repository demonstrates how to  combine embedding and reranking to develop 
      - Generate an embedding for the query.
      - Perform a similarity search within the vector database to identify the most relevant chunks based on their embeddings.
      - Retrieve these chunks as context for your query.
-     - Rerank the results using Hugging Face [Reranker](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour#re-rankers)
+     - **Rerank** the results using Hugging Face [Reranker](https://huggingface.co/docs/text-embeddings-inference/en/quick_tour#re-rankers)
 
 5. **Integrate with LLM Provider**:
    - Supported LLM Providers
@@ -53,7 +53,7 @@ This repository demonstrates how to  combine embedding and reranking to develop 
    - Design a prompt template that incorporates both the original query and the context retrieved from the vector database.
 
 7. **Process with LLM**:
-   - Send the augmented prompt, including the query and context, to the Large Language Model (LLM) for processing and generation of responses.
+   - Send the augmented prompt, including the query and reranked context, to the Large Language Model (LLM) for processing and generation of responses.
 
 This allows to enhance language processing tasks by leveraging the power of vector databases and advanced embedding models.
 
