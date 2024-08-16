@@ -41,7 +41,7 @@ func main() {
 	if *grpcFlag {
 		query := []string{"what is Deep Learning?"}
 		texts := []string{"Tomatos are fruits..", "Deep Learning is not...", "Deep learning is..."}
-		grpcClient, _ := reranker.NewReRankManager(ctx, constants.GRPC)
+		grpcClient, _ := reranker.NewReRanker(ctx, constants.GRPC)
 		result, err := grpcClient.RerankQueryResult(ctx, query, texts)
 		if err != nil {
 			log.Error().Msgf("Error initializing GrpcClient: %v\n", err)
@@ -101,17 +101,8 @@ func main() {
 		// Load the data
 		log.Debug().Msgf("Loading data from: %v", documentPath)
 		wg.Add(1)
-		go func(ctx context.Context, path string, docType constants.DocType) {
-			defer wg.Done()
-			collection, err := documenthandler.VectorEmbedData(ctx, client,
-				documenthandler.WithDocPath(path),
-				documenthandler.WithDocType(constants.TXT))
-			if err != nil {
-				errChan <- err
-			}
-			collectionChan <- collection
-
-		}(ctx, "test/model_params.txt", constants.TXT)
+		// Load the data into the collection
+		go embdedData(ctx, documentPath, client, constants.TXT, &wg, errChan, collectionChan)
 
 		c := <-collectionChan
 		log.Debug().Msgf("Loaded data to Collection: %v", c.Name)
@@ -126,6 +117,7 @@ func main() {
 		vectorChan := make(chan *chromago.QueryResults, 1)
 		rankChan := make(chan string, 1)
 		defer close(vectorChan)
+		defer close(rankChan)
 
 		// c := <-collectionChan
 		c, err := chromaclient.GetCollectionFromDb(ctx, client.Client, constants.HuggingFace, constants.HuggingFaceEmbedModel)
@@ -137,33 +129,18 @@ func main() {
 		log.Debug().Msgf("Querying collection: %v", c.Name)
 
 		wg.Add(1)
-		go func(c context.Context, collection *chromago.Collection, query []string) {
-			defer wg.Done()
-			vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
-			if err != nil {
-				errChan <- err
-				log.Error().Msgf("Failed to query vector db: %v", err)
-			}
-			vectorChan <- vectorResults
+		// Query the vector db
+		go queryVectorDB(ctx, c, vectorQuery, &wg, errChan, vectorChan)
 
-		}(ctx, c, vectorQuery)
-
-		wg.Add(1)
-		reRankClient, err := reranker.NewReRankManager(ctx, constants.GRPC)
+		// Initialize the ReRank client
+		reRankClient, err := reranker.NewReRanker(ctx, constants.GRPC)
 		if err != nil {
 			log.Error().Msgf("Error initializing ReRank Client: %v\n", err)
 			return
 		}
-		go func(c context.Context, query []string) {
-			defer wg.Done()
-			queryResults := <-vectorChan
-			rerankResults, err := reRankClient.RerankQueryResult(c, query, queryResults.Documents[0])
-			if err != nil {
-				errChan <- err
-				log.Error().Msgf("Failed to rerank query results: %v", err)
-			}
-			rankChan <- rerankResults
-		}(ctx, vectorQuery)
+		wg.Add(1)
+		// Rerank the query results
+		go rerankQueryResults(ctx, vectorQuery, vectorChan, reRankClient, &wg, errChan, rankChan)
 
 		// wait for all go routines to finish
 		wg.Wait()
@@ -178,6 +155,7 @@ func main() {
 		}
 
 		contentString := rankResult
+		// Get the final prompt
 		prompts, err := prompts.GetTemplate(constants.SystemPromptFile, queryString, contentString)
 		if err != nil {
 			log.Error().Msgf("Failed to get template: %v", err)
@@ -186,7 +164,42 @@ func main() {
 
 		log.Debug().Msgf("Final Prompt: %v", prompts)
 
+		// Chat with the user using the final prompt and content
 		chat.ChatOllama(ctx, prompts)
 	}
 
+}
+
+func embdedData(ctx context.Context, path string, client *chromaclient.ChromaClient, docType constants.DocType, wg *sync.WaitGroup, errChan chan<- error, collectionChan chan<- *chromago.Collection) {
+	defer wg.Done()
+	collection, err := documenthandler.VectorEmbedData(ctx, client,
+		documenthandler.WithDocPath(path),
+		documenthandler.WithDocType(docType))
+	if err != nil {
+		errChan <- err
+	}
+	collectionChan <- collection
+}
+
+func queryVectorDB(ctx context.Context, collection *chromago.Collection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
+	defer wg.Done()
+	vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
+	if err != nil {
+		errChan <- err
+		log.Error().Msgf("Failed to query vector db: %v", err)
+	} else {
+		vectorChan <- vectorResults
+	}
+}
+
+func rerankQueryResults(ctx context.Context, query []string, vectorChan chan *chromago.QueryResults, reRankClient reranker.Reranker, wg *sync.WaitGroup, errChan chan<- error, rankChan chan<- string) {
+	defer wg.Done()
+	queryResults := <-vectorChan
+	rerankResults, err := reRankClient.RerankQueryResult(ctx, query, queryResults.Documents[0])
+	if err != nil {
+		errChan <- err
+		log.Error().Msgf("Failed to rerank query results: %v", err)
+	} else {
+		rankChan <- rerankResults
+	}
 }
