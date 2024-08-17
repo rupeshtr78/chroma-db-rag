@@ -41,29 +41,29 @@ const (
 	TXT DocType = "txt"
 )
 
-type Embedder string
+type Embedder int
 
 // Supported Embedders
 const (
-	HuggingFace Embedder = "huggingface"
-	Ollama      Embedder = "ollama"
-	OpenAI      Embedder = "openai"
+	HuggingFace Embedder = iota
+	Ollama
+	OpenAI
 )
 
-type Protocol string
+type Protocol int
 
 // Supported Protocols
 const (
-	HTTP  Protocol = "http"
-	HTTPS Protocol = "https"
-	GRPC  Protocol = "grpc"
+	HTTP Protocol = iota
+	HTTPS
+	GRPC
 )
 
-type LLMProvider string
+type LLMProvider int
 
 // Supported Chat Models
 const (
-	OpenAIChat      LLMProvider = "openai"
-	OllamaChat      LLMProvider = "ollama"
-	HuggingFaceChat LLMProvider = "huggingface"
+	OpenAIChat LLMProvider = iota
+	OllamaChat
+	HuggingFaceChat
 )
