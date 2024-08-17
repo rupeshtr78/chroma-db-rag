@@ -10,9 +10,28 @@ import (
 
 var log = logger.Log
 
+// EmbeddingFunc interface depedency injection for embedding documents
+type EmbeddingFunc interface {
+	EmbedDocuments(ctx context.Context, docs []string) ([]*types.Embedding, error)
+}
+
+// Collection interface allows dependency injection for the collection
+type Collection interface {
+	QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error)
+	EmbeddingFunction() EmbeddingFunc
+}
+
+type ChromagoCollection struct {
+	*chromago.Collection
+}
+
+func (ccc *ChromagoCollection) EmbeddingFunction() EmbeddingFunc {
+	return ccc.Collection.EmbeddingFunction
+}
+
 // EmbedQuery embeds the query text and returns the embedding or an error
-func embedQuery(ctx context.Context, collection *chromago.Collection, query []string) ([]*types.Embedding, error) {
-	embedding, err := collection.EmbeddingFunction.EmbedDocuments(ctx, query)
+func EmbedQuery(ctx context.Context, embeddingFunc EmbeddingFunc, query []string) ([]*types.Embedding, error) {
+	embedding, err := embeddingFunc.EmbedDocuments(ctx, query)
 	if err != nil {
 		log.Debug().Msgf("Error embedding query: %s \n", err)
 		return nil, err
@@ -21,9 +40,9 @@ func embedQuery(ctx context.Context, collection *chromago.Collection, query []st
 }
 
 // QueryVectorDbWithOptions queries the vector database with the given query text and options
-func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (*chromago.QueryResults, error) {
+func QueryVectorDbWithOptions(ctx context.Context, collection Collection, queryTexts []string) (*chromago.QueryResults, error) {
 	// Query the collection
-	queryEmbeddings, err := embedQuery(ctx, collection, queryTexts)
+	queryEmbeddings, err := EmbedQuery(ctx, collection.EmbeddingFunction(), queryTexts)
 	if err != nil {
 		return nil, err
 	}

@@ -103,10 +103,12 @@ func main() {
 			return
 		}
 
+		cc := &vectordbquery.ChromagoCollection{Collection: collection}
+
 		log.Debug().Msgf("Querying collection: %v", collection.Name)
 
 		wg.Add(1)
-		go queryVectorDB(ctx, collection, vectorQuery, &wg, errChan, vectorChan)
+		go queryVectorDB(ctx, cc, vectorQuery, &wg, errChan, vectorChan)
 
 		wg.Add(1)
 		go rerankQueryResults(ctx, vectorQuery, vectorChan, reRankClient, &wg, errChan, rankChan)
@@ -152,7 +154,7 @@ func embdedData(ctx context.Context, path string, client *chromaclient.ChromaCli
 	collectionChan <- collection
 }
 
-func queryVectorDB(ctx context.Context, collection *chromago.Collection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
+func queryVectorDB(ctx context.Context, collection vectordbquery.Collection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
 	defer wg.Done()
 	vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
 	if err != nil {
