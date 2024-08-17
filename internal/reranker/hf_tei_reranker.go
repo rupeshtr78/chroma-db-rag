@@ -20,6 +20,21 @@ type HttpRerankClient struct {
 	DefaultHeaders map[string]string
 }
 
+// Added constructor function
+func NewHttpRerankClient(client *http.Client, baseURL, model, apiKey string, defaultHeaders map[string]string) *HttpRerankClient {
+	return &HttpRerankClient{
+		Client:         client,
+		BaseURL:        baseURL,
+		Model:          model,
+		apiKey:         apiKey,
+		DefaultHeaders: defaultHeaders,
+	}
+}
+
+func GetReRankClient() *HttpRerankClient {
+	return reRankClient
+}
+
 var (
 	reRankClient *HttpRerankClient
 )
