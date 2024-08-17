@@ -3,76 +3,39 @@ package vectordbquery
 import (
 	"chroma-db/pkg/logger"
 	"context"
-	"fmt"
-	"strings"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/types"
 )
 
-type CollectionQuery struct {
-	QueryTexts    []string
-	Where         map[string]interface{}
-	WhereDocument map[string]interface{}
-	NResults      int32
-	Offset        int32
-	Limit         int32
-	Ids           []string
-}
-
 var log = logger.Log
 
-// QueryVectorDb queries the vector database with the given query text // TODO: Add more details
-func QueryVectorDb(ctx context.Context, collection *chromago.Collection, queryTexts []string) (*chromago.QueryResults, error) {
-	// Query the collection
-	qr, qrerr := collection.Query(ctx,
-		queryTexts,
-		5,
-		nil,
-		nil,
-		nil)
-
-	if qrerr != nil {
-		log.Debug().Msgf("Error querying collection: %s \n", qrerr)
-		return nil, qrerr
+// EmbedQuery embeds the query text and returns the embedding or an error
+func embedQuery(ctx context.Context, collection *chromago.Collection, query []string) ([]*types.Embedding, error) {
+	embedding, err := collection.EmbeddingFunction.EmbedDocuments(ctx, query)
+	if err != nil {
+		log.Debug().Msgf("Error embedding query: %s \n", err)
+		return nil, err
 	}
-
-	numResults := len(qr.Documents[0])
-	if numResults == 0 {
-		return nil, fmt.Errorf("no results found for query: %v", queryTexts)
-	}
-
-	log.Debug().Msgf("Query Results Length: %v\n", numResults)
-	log.Debug().Msgf("Query Distance: %v\n", qr.Distances)
-	log.Debug().Msgf("Query Metadata: %v\n", qr.Metadatas)
-
-	return qr, nil
+	return embedding, nil
 }
 
 // QueryVectorDbWithOptions queries the vector database with the given query text and options
 func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collection, queryTexts []string) (*chromago.QueryResults, error) {
 	// Query the collection
-	str := strings.Builder{}
-	for _, text := range queryTexts {
-		str.WriteString(text)
-	}
-
-	// Embed the query text
-	embedding, err := collection.EmbeddingFunction.EmbedQuery(ctx, str.String())
+	queryEmbeddings, err := embedQuery(ctx, collection, queryTexts)
 	if err != nil {
-		log.Debug().Msgf("Error embedding query: %s \n", err)
 		return nil, err
 	}
 
-	queryEmbedder := []*types.Embedding{embedding}
-	// _ = queryEmbedder
+	// log.Debug().Msgf("Query Embeddings: %v\n", queryEmbeddings)
 
 	options := []types.CollectionQueryOption{
-		// types.WithQueryTexts(queryTexts),
-		types.WithQueryText(str.String()),
-		types.WithNResults(5), // add more results need testing
+		types.WithQueryTexts(queryTexts),
+		// types.WithQueryText(str.String()),
+		types.WithNResults(5), // add more results
 		// types.WithOffset(10),
-		types.WithQueryEmbeddings(queryEmbedder),
+		types.WithQueryEmbeddings(queryEmbeddings), // error payload too large
 	}
 
 	qr, qrerr := collection.QueryWithOptions(ctx, options...)
@@ -102,3 +65,13 @@ func QueryVectorDbWithOptions(ctx context.Context, collection *chromago.Collecti
 	// queryResults := qr.Documents[0][index]
 	return qr, nil
 }
+
+// type CollectionQuery struct {
+// 	QueryTexts    []string
+// 	Where         map[string]interface{}
+// 	WhereDocument map[string]interface{}
+// 	NResults      int32
+// 	Offset        int32
+// 	Limit         int32
+// 	Ids           []string
+// }
