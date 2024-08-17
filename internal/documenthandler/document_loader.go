@@ -17,6 +17,13 @@ type DocumentLoader interface {
 	LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error)
 }
 
+// Implementing the file reader interface for real file operations
+type FileReader struct{}
+
+func (r *FileReader) ReadFile(filePath string) (*os.File, error) {
+	return os.Open(filePath)
+}
+
 // NewDocumentLoader returns a new DocumentLoader based on the docType
 func NewDocumentLoader(docType constants.DocType) DocumentLoader {
 	switch docType {
@@ -29,14 +36,16 @@ func NewDocumentLoader(docType constants.DocType) DocumentLoader {
 	}
 }
 
-type TextLoader struct{}
+type TextLoader struct {
+	fileReader FileReader
+}
 
 // LoadDocument loads the text data from the given file path
 func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
 	if filePath == "" {
 		return nil, nil, fmt.Errorf("TextLoaderV2: File path is empty")
 	}
-	f, err := os.Open(filePath)
+	f, err := t.fileReader.ReadFile(filePath)
 	if err != nil {
 		return nil, nil, err
 	}
