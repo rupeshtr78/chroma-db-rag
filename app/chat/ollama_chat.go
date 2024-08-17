@@ -13,11 +13,11 @@ import (
 
 var log = logger.Log
 
-type ChatManager interface {
+type ModelProvider interface {
 	Chat(ctx context.Context, prompt string)
 }
 
-func NewChatManager(provider constants.LLMProvider, model string, url string, apiKey string) ChatManager {
+func NewModelProvider(provider constants.LLMProvider, model string, url string, apiKey string) ModelProvider {
 	switch provider {
 	case constants.HuggingFaceChat:
 		return &HuggingFaceChat{
