@@ -3,7 +3,6 @@ package vectordb
 import (
 	"chroma-db/internal/constants"
 	"context"
-	"fmt"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/types"
@@ -18,6 +17,10 @@ type RecordSet interface {
 
 type ChromagoRecordSet struct {
 	RecordSet *types.RecordSet
+}
+
+func NewChromagoRecordSet(rs *types.RecordSet) *ChromagoRecordSet {
+	return &ChromagoRecordSet{rs}
 }
 
 func (rsw *ChromagoRecordSet) WithRecord(recordOpts ...types.Option) *types.RecordSet {
@@ -75,6 +78,12 @@ func (c *ChromagoCollection) AddRecordSetToCollection(ctx context.Context,
 func (rs *ChromagoRecordSet) AddTextToRecordSet(ctx context.Context, documents []string,
 	metadata map[string]any) (*types.RecordSet, error) {
 
+	// Ensure metadata map is initialized if nil
+	if metadata == nil {
+		metadata = make(map[string]any)
+	}
+	log.Debug().Msgf("Metadata: %v\n", metadata)
+
 	// Iterate over documents and metadata list and add records to the record set
 	for _, doc := range documents {
 		rs.WithRecord(
@@ -87,22 +96,22 @@ func (rs *ChromagoRecordSet) AddTextToRecordSet(ctx context.Context, documents [
 }
 
 // AddPdfToRecordSet adds pdf documents to the record set
-func AddPdfToRecordSet(ctx context.Context,
-	collection *chromago.Collection,
-	rs *types.RecordSet,
-	documents []string,
-	metadata map[string]any) (*types.RecordSet, error) {
+// func AddPdfToRecordSet(ctx context.Context,
+// 	collection *chromago.Collection,
+// 	rs *types.RecordSet,
+// 	documents []string,
+// 	metadata map[string]any) (*types.RecordSet, error) {
 
-	// Iterate over documents and metadata list and add records to the record set
-	for i, doc := range documents {
-		pageNum := i + 1
-		key := fmt.Sprintf("%d", pageNum)
-		metadataValue := metadata[key].(string)
-		rs.WithRecord(
-			types.WithDocument(doc),
-			types.WithMetadata(key, metadataValue),
-		)
-	}
+// 	// Iterate over documents and metadata list and add records to the record set
+// 	for i, doc := range documents {
+// 		pageNum := i + 1
+// 		key := fmt.Sprintf("%d", pageNum)
+// 		metadataValue := metadata[key].(string)
+// 		rs.WithRecord(
+// 			types.WithDocument(doc),
+// 			types.WithMetadata(key, metadataValue),
+// 		)
+// 	}
 
-	return rs, nil
-}
+// 	return rs, nil
+// }

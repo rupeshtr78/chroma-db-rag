@@ -1,127 +1,148 @@
 package vectordb
 
-// import (
-// 	"context"
-// 	"errors"
-// 	"testing"
+import (
+	"chroma-db/internal/constants"
+	"context"
+	"errors"
+	"testing"
 
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
-// 	chromago "github.com/amikos-tech/chroma-go"
-// 	"github.com/amikos-tech/chroma-go/types"
-// )
+	chromago "github.com/amikos-tech/chroma-go"
+	"github.com/amikos-tech/chroma-go/types"
+)
 
-// type MockEmbeddingFunc struct {
-// 	mock.Mock
-// }
+type MockEmbeddingFunc struct {
+	mock.Mock
+}
 
-// func (m *MockEmbeddingFunc) EmbedDocuments(ctx context.Context, docs []string) ([]*types.Embedding, error) {
-// 	args := m.Called(ctx, docs)
-// 	return args.Get(0).([]*types.Embedding), args.Error(1)
-// }
+func (m *MockEmbeddingFunc) EmbedDocuments(ctx context.Context, docs []string) ([]*types.Embedding, error) {
+	args := m.Called(ctx, docs)
+	return args.Get(0).([]*types.Embedding), args.Error(1)
+}
 
-// type MockCollection struct {
-// 	mock.Mock
-// }
+func (m *MockEmbeddingFunc) EmbedQuery(context.Context, string) (*types.Embedding, error) {
+	args := m.Called()
+	return args.Get(0).(*types.Embedding), args.Error(1)
+}
 
-// func (m *MockCollection) QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error) {
-// 	args := m.Called(ctx, options)
-// 	return args.Get(0).(*chromago.QueryResults), args.Error(1)
-// }
+func (m *MockEmbeddingFunc) EmbedRecords(ctx context.Context, records []*types.Record, force bool) error {
+	args := m.Called(ctx, records, force)
+	return args.Error(0)
+}
 
-// func (m *MockCollection) EmbeddingFunction() EmbeddingFunc {
-// 	args := m.Called()
-// 	return args.Get(0).(EmbeddingFunc)
-// }
+type MockCollection struct {
+	mock.Mock
+}
 
-// func TestEmbedQuery(t *testing.T) {
-// 	ctx := context.Background()
-// 	mockEmbeddingFunc := new(MockEmbeddingFunc)
+func (m *MockCollection) QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error) {
+	args := m.Called(ctx, options)
+	return args.Get(0).(*chromago.QueryResults), args.Error(1)
+}
 
-// 	query := []string{"example query"}
-// 	embeddings := []*types.Embedding{
-// 		{ArrayOfFloat32: &[]float32{0.1, 0.2, 0.3}},
-// 	}
+func (m *MockCollection) EmbeddingFunction() EmbeddingFunc {
+	args := m.Called()
+	return args.Get(0).(EmbeddingFunc)
+}
 
-// 	mockEmbeddingFunc.On("EmbedDocuments", ctx, query).Return(embeddings, nil)
+func (m *MockCollection) AddRecords(ctx context.Context, recordSet *types.RecordSet) (*chromago.Collection, error) {
+	args := m.Called(ctx, recordSet)
+	return args.Get(0).(*chromago.Collection), args.Error(1)
+}
 
-// 	result, err := EmbedQuery(ctx, mockEmbeddingFunc, query)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, embeddings, result)
+func (m *MockCollection) AddRecordSetToCollection(ctx context.Context, recordSet *ChromagoRecordSet, docs []string, metadata constants.Metadata) (*chromago.Collection, error) {
+	args := m.Called(ctx, recordSet, docs, metadata)
+	return args.Get(0).(*chromago.Collection), args.Error(1)
+}
 
-// 	mockEmbeddingFunc.AssertExpectations(t)
-// }
+func TestEmbedQuery(t *testing.T) {
+	ctx := context.Background()
+	mockEmbeddingFunc := new(MockEmbeddingFunc)
 
-// func TestQueryVectorDbWithOptions(t *testing.T) {
-// 	ctx := context.Background()
-// 	mockCollection := new(MockCollection)
-// 	mockEmbeddingFunc := new(MockEmbeddingFunc)
+	query := []string{"example query"}
+	embeddings := []*types.Embedding{
+		{ArrayOfFloat32: &[]float32{0.1, 0.2, 0.3}},
+	}
 
-// 	queryTexts := []string{"query1", "query2"}
-// 	embeddings := []*types.Embedding{
-// 		{ArrayOfFloat32: &[]float32{0.1, 0.2, 0.3}},
-// 	}
+	mockEmbeddingFunc.On("EmbedDocuments", ctx, query).Return(embeddings, nil)
 
-// 	mockEmbeddingFunc.On("EmbedDocuments", ctx, queryTexts).Return(embeddings, nil)
+	result, err := EmbedQuery(ctx, mockEmbeddingFunc, query)
+	assert.NoError(t, err)
+	assert.Equal(t, embeddings, result)
 
-// 	results := &chromago.QueryResults{
-// 		Documents: [][]string{
-// 			{"doc1", "doc2"},
-// 		},
-// 	}
+	mockEmbeddingFunc.AssertExpectations(t)
+}
 
-// 	mockCollection.On("EmbeddingFunction").Return(mockEmbeddingFunc)
-// 	mockCollection.On("QueryWithOptions", ctx, mock.Anything).Return(results, nil)
+func TestQueryVectorDbWithOptions(t *testing.T) {
+	ctx := context.Background()
+	mockCollection := new(MockCollection)
+	mockEmbeddingFunc := new(MockEmbeddingFunc)
 
-// 	result, err := QueryVectorDbWithOptions(ctx, mockCollection, queryTexts)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, results, result)
+	queryTexts := []string{"query1", "query2"}
+	embeddings := []*types.Embedding{
+		{ArrayOfFloat32: &[]float32{0.1, 0.2, 0.3}},
+	}
 
-// 	mockCollection.AssertExpectations(t)
-// 	mockEmbeddingFunc.AssertExpectations(t)
-// }
+	mockEmbeddingFunc.On("EmbedDocuments", ctx, queryTexts).Return(embeddings, nil)
 
-// func TestQueryVectorDbWithOptions_EmbeddingError(t *testing.T) {
-// 	ctx := context.Background()
-// 	mockCollection := new(MockCollection)
-// 	mockEmbeddingFunc := new(MockEmbeddingFunc)
+	results := &chromago.QueryResults{
+		Documents: [][]string{
+			{"doc1", "doc2"},
+		},
+	}
 
-// 	queryTexts := []string{"query1", "query2"}
-// 	embeddingError := errors.New("embedding error")
+	mockCollection.On("EmbeddingFunction").Return(mockEmbeddingFunc)
+	mockCollection.On("QueryWithOptions", ctx, mock.Anything).Return(results, nil)
 
-// 	mockEmbeddingFunc.On("EmbedDocuments", ctx, queryTexts).Return([]*types.Embedding{}, embeddingError)
+	result, err := QueryVectorDbWithOptions(ctx, mockCollection, queryTexts)
+	assert.NoError(t, err)
+	assert.Equal(t, results, result)
 
-// 	mockCollection.On("EmbeddingFunction").Return(mockEmbeddingFunc)
+	mockCollection.AssertExpectations(t)
+	mockEmbeddingFunc.AssertExpectations(t)
+}
 
-// 	result, err := QueryVectorDbWithOptions(ctx, mockCollection, queryTexts)
-// 	assert.Nil(t, result)
-// 	assert.Equal(t, embeddingError, err)
+func TestQueryVectorDbWithOptions_EmbeddingError(t *testing.T) {
+	ctx := context.Background()
+	mockCollection := new(MockCollection)
+	mockEmbeddingFunc := new(MockEmbeddingFunc)
 
-// 	mockCollection.AssertExpectations(t)
-// 	mockEmbeddingFunc.AssertExpectations(t)
-// }
+	queryTexts := []string{"query1", "query2"}
+	embeddingError := errors.New("embedding error")
 
-// func TestQueryVectorDbWithOptions_QueryError(t *testing.T) {
-// 	ctx := context.Background()
-// 	mockCollection := new(MockCollection)
-// 	mockEmbeddingFunc := new(MockEmbeddingFunc)
+	mockEmbeddingFunc.On("EmbedDocuments", ctx, queryTexts).Return([]*types.Embedding{}, embeddingError)
 
-// 	queryError := errors.New("query error")
-// 	queryTexts := []string{"query1", "query2"}
-// 	embeddings := []*types.Embedding{
-// 		{ArrayOfFloat32: &[]float32{0.1, 0.2, 0.3}},
-// 	}
-// 	mockEmbeddingFunc.On("EmbedDocuments", ctx, queryTexts).Return(embeddings, nil)
+	mockCollection.On("EmbeddingFunction").Return(mockEmbeddingFunc)
 
-// 	mockCollection.On("EmbeddingFunction").Return(mockEmbeddingFunc)
-// 	mockCollection.On("QueryWithOptions", ctx, mock.Anything).Return(&chromago.QueryResults{}, queryError)
+	result, err := QueryVectorDbWithOptions(ctx, mockCollection, queryTexts)
+	assert.Nil(t, result)
+	assert.Equal(t, embeddingError, err)
 
-// 	result, err := QueryVectorDbWithOptions(ctx, mockCollection, queryTexts)
-// 	assert.Nil(t, result)
-// 	assert.Equal(t, queryError, err)
+	mockCollection.AssertExpectations(t)
+	mockEmbeddingFunc.AssertExpectations(t)
+}
 
-// 	mockCollection.AssertExpectations(t)
-// 	mockEmbeddingFunc.AssertExpectations(t)
+func TestQueryVectorDbWithOptions_QueryError(t *testing.T) {
+	ctx := context.Background()
+	mockCollection := new(MockCollection)
+	mockEmbeddingFunc := new(MockEmbeddingFunc)
 
-// }
+	queryError := errors.New("query error")
+	queryTexts := []string{"query1", "query2"}
+	embeddings := []*types.Embedding{
+		{ArrayOfFloat32: &[]float32{0.1, 0.2, 0.3}},
+	}
+	mockEmbeddingFunc.On("EmbedDocuments", ctx, queryTexts).Return(embeddings, nil)
+
+	mockCollection.On("EmbeddingFunction").Return(mockEmbeddingFunc)
+	mockCollection.On("QueryWithOptions", ctx, mock.Anything).Return(&chromago.QueryResults{}, queryError)
+
+	result, err := QueryVectorDbWithOptions(ctx, mockCollection, queryTexts)
+	assert.Nil(t, result)
+	assert.Equal(t, queryError, err)
+
+	mockCollection.AssertExpectations(t)
+	mockEmbeddingFunc.AssertExpectations(t)
+
+}

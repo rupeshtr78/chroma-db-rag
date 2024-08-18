@@ -12,6 +12,8 @@ import (
 // EmbeddingFunc interface depedency injection for embedding documents
 type EmbeddingFunc interface {
 	EmbedDocuments(ctx context.Context, docs []string) ([]*types.Embedding, error)
+	EmbedQuery(context.Context, string) (*types.Embedding, error)
+	EmbedRecords(ctx context.Context, records []*types.Record, force bool) error
 }
 
 // Collection interface allows dependency injection for the collection
