@@ -1,6 +1,7 @@
 package vectordb
 
 import (
+	"chroma-db/internal/chromaclient"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -23,8 +24,11 @@ type ChromagoCollection struct {
 	Collection *chromago.Collection
 }
 
-func NewChromagoCollection(collection *chromago.Collection) *ChromagoCollection {
-	return &ChromagoCollection{Collection: collection}
+// NewChromagoCollection creates a new collection with the given name, embedding function and distance function.
+func NewChromagoCollection(ctx context.Context, chromaClient *chromaclient.ChromaClient, embeddingFunction types.EmbeddingFunction) (*ChromagoCollection, error) {
+	// CreateCollection creates a new collection with the given name, embedding function and distance function.
+	collection, err := chromaclient.CreateCollection(ctx, chromaClient, embeddingFunction)
+	return &ChromagoCollection{Collection: collection}, err
 }
 
 func (c *ChromagoCollection) EmbeddingFunction() EmbeddingFunc {
@@ -46,7 +50,7 @@ type RecordSet interface {
 }
 
 type RecordSetWrapper struct {
-	*types.RecordSet
+	RecordSet *types.RecordSet
 }
 
 func (rsw *RecordSetWrapper) WithRecord(recordOpts ...types.Option) *types.RecordSet {

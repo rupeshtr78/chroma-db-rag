@@ -87,12 +87,10 @@ func main() {
 			return
 		}
 
-		collection, err := chromaclient.CreateCollection(ctx, client, embeddingFunction)
-
-		c := vectordb.NewChromagoCollection(collection)
+		collection, err := vectordb.NewChromagoCollection(ctx, client, embeddingFunction)
 
 		// Load the data into the collection
-		go embdedData(ctx, documentPath, c, recordSet, constants.TXT, &wg, errChan, collectionChan)
+		go embdedData(ctx, documentPath, collection, recordSet, constants.TXT, &wg, errChan, collectionChan)
 
 		select {
 		case <-errChan:
@@ -120,7 +118,7 @@ func main() {
 			return
 		}
 
-		cc := vectordb.NewChromagoCollection(collection)
+		cc := &vectordb.ChromagoCollection{Collection: collection}
 
 		log.Debug().Msgf("Querying collection: %v", collection.Name)
 
