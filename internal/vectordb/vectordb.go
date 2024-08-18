@@ -16,13 +16,39 @@ type EmbeddingFunc interface {
 type Collection interface {
 	QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error)
 	EmbeddingFunction() EmbeddingFunc
-	// AddRecordSetToCollection(ctx context.Context, recordSet *types.RecordSet, docs []string, metadata map[string]interface{}) (*chromago.Collection, error)
+	AddRecords(ctx context.Context, recordSet *types.RecordSet) (*chromago.Collection, error)
 }
 
 type ChromagoCollection struct {
-	*chromago.Collection
+	Collection *chromago.Collection
 }
 
-func (ccc *ChromagoCollection) EmbeddingFunction() EmbeddingFunc {
-	return ccc.Collection.EmbeddingFunction
+func NewChromagoCollection(collection *chromago.Collection) *ChromagoCollection {
+	return &ChromagoCollection{Collection: collection}
+}
+
+func (c *ChromagoCollection) EmbeddingFunction() EmbeddingFunc {
+	return c.Collection.EmbeddingFunction
+}
+
+func (c *ChromagoCollection) AddRecords(ctx context.Context, recordSet *types.RecordSet) (*chromago.Collection, error) {
+	cc, err := c.Collection.AddRecords(ctx, recordSet)
+	return cc, err
+}
+
+func (c *ChromagoCollection) QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error) {
+	qr, err := c.Collection.QueryWithOptions(ctx, options...)
+	return qr, err
+}
+
+type RecordSet interface {
+	WithRecord(recordOpts ...types.Option) *types.RecordSet
+}
+
+type RecordSetWrapper struct {
+	*types.RecordSet
+}
+
+func (rsw *RecordSetWrapper) WithRecord(recordOpts ...types.Option) *types.RecordSet {
+	return rsw.RecordSet.WithRecord(recordOpts...)
 }

@@ -6,6 +6,7 @@ import (
 	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/documenthandler"
+	"chroma-db/internal/embedders"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/reranker"
 	"chroma-db/internal/vectordb"
@@ -17,6 +18,7 @@ import (
 	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
+	"github.com/amikos-tech/chroma-go/types"
 )
 
 var log = logger.Log
@@ -74,8 +76,23 @@ func main() {
 		// Load the data
 		log.Debug().Msgf("Loading data from: %v", documentPath)
 		wg.Add(1)
+		embeddingFunction, err := embedders.CreateEmbeddingFunction(constants.HuggingFace, constants.HuggingFaceEmbedModel)
+		if err != nil {
+			log.Error().Msgf("Error creating embedding function: %v", err)
+			return
+		}
+		recordSet, error := vectordb.CreateRecordSet(embeddingFunction)
+		if error != nil {
+			log.Error().Msgf("Error creating record set: %v", error)
+			return
+		}
+
+		collection, err := chromaclient.CreateCollection(ctx, client, embeddingFunction)
+
+		c := vectordb.NewChromagoCollection(collection)
+
 		// Load the data into the collection
-		go embdedData(ctx, documentPath, client, constants.TXT, &wg, errChan, collectionChan)
+		go embdedData(ctx, documentPath, c, recordSet, constants.TXT, &wg, errChan, collectionChan)
 
 		select {
 		case <-errChan:
@@ -103,7 +120,7 @@ func main() {
 			return
 		}
 
-		cc := &vectordb.ChromagoCollection{Collection: collection}
+		cc := vectordb.NewChromagoCollection(collection)
 
 		log.Debug().Msgf("Querying collection: %v", collection.Name)
 
@@ -143,9 +160,10 @@ func main() {
 
 }
 
-func embdedData(ctx context.Context, path string, client *chromaclient.ChromaClient, docType constants.DocType, wg *sync.WaitGroup, errChan chan<- error, collectionChan chan<- *chromago.Collection) {
+func embdedData(ctx context.Context, path string, c *vectordb.ChromagoCollection, recordSet *types.RecordSet, docType constants.DocType, wg *sync.WaitGroup, errChan chan<- error, collectionChan chan<- *chromago.Collection) {
 	defer wg.Done()
-	collection, err := documenthandler.VectorEmbedData(ctx, client,
+	// VectorEmbedData(ctx context.Context, c *vectordb.ChromagoCollection, recordSet *types.RecordSet, options ...Option) (*chromago.Collection, error)
+	collection, err := documenthandler.VectorEmbedData(ctx, c, recordSet,
 		documenthandler.WithDocPath(path),
 		documenthandler.WithDocType(docType))
 	if err != nil {
@@ -154,7 +172,7 @@ func embdedData(ctx context.Context, path string, client *chromaclient.ChromaCli
 	collectionChan <- collection
 }
 
-func queryVectorDB(ctx context.Context, collection vectordb.Collection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
+func queryVectorDB(ctx context.Context, collection *vectordb.ChromagoCollection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
 	defer wg.Done()
 	vectorResults, err := vectordb.QueryVectorDbWithOptions(ctx, collection, query)
 	if err != nil {

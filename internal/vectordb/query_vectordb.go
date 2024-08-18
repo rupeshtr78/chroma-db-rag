@@ -19,7 +19,7 @@ func EmbedQuery(ctx context.Context, embeddingFunc EmbeddingFunc, query []string
 }
 
 // QueryVectorDbWithOptions queries the vector database with the given query text and options
-func QueryVectorDbWithOptions(ctx context.Context, collection Collection, queryTexts []string) (*chromago.QueryResults, error) {
+func QueryVectorDbWithOptions(ctx context.Context, collection *ChromagoCollection, queryTexts []string) (*chromago.QueryResults, error) {
 	// Query the collection
 	queryEmbeddings, err := EmbedQuery(ctx, collection.EmbeddingFunction(), queryTexts)
 	if err != nil {
@@ -63,13 +63,3 @@ func QueryVectorDbWithOptions(ctx context.Context, collection Collection, queryT
 	// queryResults := qr.Documents[0][index]
 	return qr, nil
 }
-
-// type CollectionQuery struct {
-// 	QueryTexts    []string
-// 	Where         map[string]interface{}
-// 	WhereDocument map[string]interface{}
-// 	NResults      int32
-// 	Offset        int32
-// 	Limit         int32
-// 	Ids           []string
-// }

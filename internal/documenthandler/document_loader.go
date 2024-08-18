@@ -78,8 +78,8 @@ func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]strin
 		}
 	}
 
-	log.Info().Msgf("TextLoaderV2: Successfully loaded text data from %s", filePath)
-	log.Debug().Msgf("TextLoaderV2: Metadata: %v", metadata)
+	log.Debug().Msgf("TextLoader: Loading loaded text data from %s", filePath)
+	log.Debug().Msgf("TextLoader: Metadata: %v", metadata)
 
 	return strSlice, metadata, nil
 }

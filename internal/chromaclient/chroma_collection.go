@@ -11,8 +11,31 @@ import (
 	"github.com/amikos-tech/chroma-go/types"
 )
 
-// GetOrCreateCollection creates a new **chromago.Collection** if it does not exist
-func GetOrCreateCollection(ctx context.Context,
+// CreateCollection creates a new collection with the given name, embedding function and distance function.
+func CreateCollection(ctx context.Context, chromaClient *ChromaClient, hfef types.EmbeddingFunction) (*chromago.Collection, error) {
+
+	// delete the collection if it exists
+	err := DeleteCollectionIfExists(ctx, constants.Collection, chromaClient.Client, hfef)
+	if err != nil {
+		log.Debug().Msgf("Error deleting collection: %v\n", err)
+		return nil, err
+	}
+
+	// Create a new collection with the given name client tenant and database
+	collection, err := CreateNewCollection(ctx, chromaClient.Client,
+		constants.Collection,
+		hfef,
+		constants.DistanceFn)
+	if err != nil {
+		log.Debug().Msgf("Error getting or creating collection: %v\n", constants.Collection)
+		return nil, err
+	}
+
+	return collection, nil
+}
+
+// CreateNewCollection creates a new **chromago.Collection** if it does not exist
+func CreateNewCollection(ctx context.Context,
 	client *chromago.Client,
 	collectionName string,
 	embeddingFunction types.EmbeddingFunction,
@@ -96,7 +119,7 @@ func GetCollectionFromDb(ctx context.Context, chromaClient *chromago.Client, emb
 	}
 
 	// Create a new collection with the given name client tenant and database
-	collection, err := GetOrCreateCollection(ctx, chromaClient,
+	collection, err := CreateNewCollection(ctx, chromaClient,
 		constants.Collection,
 		hfef,
 		constants.DistanceFn)
