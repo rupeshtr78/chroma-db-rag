@@ -1,33 +1,12 @@
-package vectordbquery
+package vectordb
 
 import (
-	"chroma-db/pkg/logger"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/types"
+	"github.com/rs/zerolog/log"
 )
-
-var log = logger.Log
-
-// EmbeddingFunc interface depedency injection for embedding documents
-type EmbeddingFunc interface {
-	EmbedDocuments(ctx context.Context, docs []string) ([]*types.Embedding, error)
-}
-
-// Collection interface allows dependency injection for the collection
-type Collection interface {
-	QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error)
-	EmbeddingFunction() EmbeddingFunc
-}
-
-type ChromagoCollection struct {
-	*chromago.Collection
-}
-
-func (ccc *ChromagoCollection) EmbeddingFunction() EmbeddingFunc {
-	return ccc.Collection.EmbeddingFunction
-}
 
 // EmbedQuery embeds the query text and returns the embedding or an error
 func EmbedQuery(ctx context.Context, embeddingFunc EmbeddingFunc, query []string) ([]*types.Embedding, error) {

@@ -8,7 +8,7 @@ import (
 	"chroma-db/internal/documenthandler"
 	"chroma-db/internal/prompts"
 	"chroma-db/internal/reranker"
-	"chroma-db/internal/vectordbquery"
+	"chroma-db/internal/vectordb"
 	"chroma-db/pkg/logger"
 	"context"
 	"flag"
@@ -103,7 +103,7 @@ func main() {
 			return
 		}
 
-		cc := &vectordbquery.ChromagoCollection{Collection: collection}
+		cc := &vectordb.ChromagoCollection{Collection: collection}
 
 		log.Debug().Msgf("Querying collection: %v", collection.Name)
 
@@ -154,9 +154,9 @@ func embdedData(ctx context.Context, path string, client *chromaclient.ChromaCli
 	collectionChan <- collection
 }
 
-func queryVectorDB(ctx context.Context, collection vectordbquery.Collection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
+func queryVectorDB(ctx context.Context, collection vectordb.Collection, query []string, wg *sync.WaitGroup, errChan chan<- error, vectorChan chan<- *chromago.QueryResults) {
 	defer wg.Done()
-	vectorResults, err := vectordbquery.QueryVectorDbWithOptions(ctx, collection, query)
+	vectorResults, err := vectordb.QueryVectorDbWithOptions(ctx, collection, query)
 	if err != nil {
 		errChan <- err
 		log.Error().Msgf("Failed to query vector db: %v", err)

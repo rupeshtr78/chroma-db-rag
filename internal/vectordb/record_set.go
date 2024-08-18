@@ -1,16 +1,18 @@
-package chromaclient
+package vectordb
 
 import (
+	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
 	"chroma-db/internal/embedders"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/types"
+	"github.com/rs/zerolog/log"
 )
 
 // CreateCollectionAndRecordSet creates a new collection with the given name, embedding function and distance function.
-func CreateCollectionAndRecordSet(ctx context.Context, chromaClient *ChromaClient, embbedder constants.Embedder, embeddingModel string) (*chromago.Collection, *types.RecordSet, error) {
+func CreateCollectionAndRecordSet(ctx context.Context, chromaClient *chromaclient.ChromaClient, embbedder constants.Embedder, embeddingModel string) (*chromago.Collection, *types.RecordSet, error) {
 	// Get Embedding either HuggingFace or Ollama
 	em := embedders.NewEmbeddingManager(embbedder, constants.HuggingFaceTeiUrl, embeddingModel)
 
@@ -21,14 +23,14 @@ func CreateCollectionAndRecordSet(ctx context.Context, chromaClient *ChromaClien
 	}
 
 	// delete the collection if it exists
-	err = DeleteCollectionIfExists(ctx, constants.Collection, chromaClient.Client, hfef)
+	err = chromaclient.DeleteCollectionIfExists(ctx, constants.Collection, chromaClient.Client, hfef)
 	if err != nil {
 		log.Debug().Msgf("Error deleting collection: %v\n", err)
 		return nil, nil, err
 	}
 
 	// Create a new collection with the given name client tenant and database
-	collection, err := GetOrCreateCollection(ctx, chromaClient.Client,
+	collection, err := chromaclient.GetOrCreateCollection(ctx, chromaClient.Client,
 		constants.Collection,
 		hfef,
 		constants.DistanceFn)
@@ -45,4 +47,18 @@ func CreateCollectionAndRecordSet(ctx context.Context, chromaClient *ChromaClien
 	}
 
 	return collection, recordSet, nil
+}
+
+func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*types.RecordSet, error) {
+	// Create a new record set with to hold the records to insert
+	rs, err := types.NewRecordSet(
+		types.WithEmbeddingFunction(embeddingFunction),
+		types.WithIDGenerator(types.NewULIDGenerator()),
+	)
+	if err != nil {
+		log.Err(err).Msg("Error creating record set")
+		return nil, err
+	}
+
+	return rs, nil
 }
