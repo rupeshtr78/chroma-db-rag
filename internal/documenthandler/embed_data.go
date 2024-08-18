@@ -66,7 +66,7 @@ func WithEmbeddingModel(model string) Option {
 }
 
 // VectorEmbedData embeds the data in the collection
-func VectorEmbedData(ctx context.Context, c *vectordb.ChromagoCollection, recordSet *types.RecordSet, options ...Option) (*chromago.Collection, error) {
+func VectorEmbedData(ctx context.Context, c vectordb.Collection, recordSet *types.RecordSet, options ...Option) (*chromago.Collection, error) {
 	// Default options
 	opts := &ollamaRagOptions{
 		ChromaURL:      constants.ChromaUrl,

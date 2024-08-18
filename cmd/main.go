@@ -158,7 +158,14 @@ func main() {
 
 }
 
-func embdedData(ctx context.Context, path string, c *vectordb.ChromagoCollection, recordSet *types.RecordSet, docType constants.DocType, wg *sync.WaitGroup, errChan chan<- error, collectionChan chan<- *chromago.Collection) {
+func embdedData(ctx context.Context,
+	path string,
+	c vectordb.Collection,
+	recordSet *types.RecordSet,
+	docType constants.DocType,
+	wg *sync.WaitGroup,
+	errChan chan<- error,
+	collectionChan chan<- *chromago.Collection) {
 	defer wg.Done()
 	// VectorEmbedData(ctx context.Context, c *vectordb.ChromagoCollection, recordSet *types.RecordSet, options ...Option) (*chromago.Collection, error)
 	collection, err := documenthandler.VectorEmbedData(ctx, c, recordSet,
