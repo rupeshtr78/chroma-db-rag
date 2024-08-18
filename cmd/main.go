@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	"github.com/amikos-tech/chroma-go/types"
 )
 
 var log = logger.Log
@@ -161,7 +160,7 @@ func main() {
 func embdedData(ctx context.Context,
 	path string,
 	c vectordb.Collection,
-	recordSet *types.RecordSet,
+	recordSet *vectordb.ChromagoRecordSet,
 	docType constants.DocType,
 	wg *sync.WaitGroup,
 	errChan chan<- error,

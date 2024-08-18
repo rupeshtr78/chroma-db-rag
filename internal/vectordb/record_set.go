@@ -12,17 +12,23 @@ import (
 
 type RecordSet interface {
 	WithRecord(recordOpts ...types.Option) *types.RecordSet
+	BuildAndValidate(ctx context.Context) ([]*types.Record, error)
+	AddTextToRecordSet(ctx context.Context, documents []string, metadata map[string]any) (*types.RecordSet, error)
 }
 
-type RecordSetWrapper struct {
+type ChromagoRecordSet struct {
 	RecordSet *types.RecordSet
 }
 
-func (rsw *RecordSetWrapper) WithRecord(recordOpts ...types.Option) *types.RecordSet {
+func (rsw *ChromagoRecordSet) WithRecord(recordOpts ...types.Option) *types.RecordSet {
 	return rsw.RecordSet.WithRecord(recordOpts...)
 }
 
-func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*types.RecordSet, error) {
+func (rsw *ChromagoRecordSet) BuildAndValidate(ctx context.Context) ([]*types.Record, error) {
+	return rsw.RecordSet.BuildAndValidate(ctx)
+}
+
+func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*ChromagoRecordSet, error) {
 	// Create a new record set with to hold the records to insert
 	rs, err := types.NewRecordSet(
 		types.WithEmbeddingFunction(embeddingFunction),
@@ -33,27 +39,30 @@ func CreateRecordSet(embeddingFunction types.EmbeddingFunction) (*types.RecordSe
 		return nil, err
 	}
 
-	return rs, nil
+	return &ChromagoRecordSet{RecordSet: rs}, nil
 }
 
 // AddRecordSetToCollection adds a record set to a collection
 func (c *ChromagoCollection) AddRecordSetToCollection(ctx context.Context,
-	recordSet *types.RecordSet,
+	recordSet *ChromagoRecordSet,
 	docs []string,
 	metadata constants.Metadata) (*chromago.Collection, error) {
 
-	recordSet, err := addDocumentsToRecordSet(ctx, recordSet, docs, metadata)
+	records, err := recordSet.AddTextToRecordSet(ctx, docs, metadata)
 	if err != nil {
+		log.Debug().Msgf("Error adding to record set: %v\n", err)
 		return nil, err
 	}
 
-	err = validateRecordSet(ctx, recordSet)
+	_, err = recordSet.BuildAndValidate(ctx)
 	if err != nil {
+		log.Debug().Msgf("Error building and validating records: %v\n", err)
 		return nil, err
 	}
 
-	coll, err := addRecordsToCollection(ctx, c, recordSet)
+	coll, err := c.AddRecords(ctx, records)
 	if err != nil {
+		log.Err(err).Msg("Error adding records to collection")
 		return nil, err
 	}
 
@@ -62,41 +71,19 @@ func (c *ChromagoCollection) AddRecordSetToCollection(ctx context.Context,
 	return coll, nil
 }
 
-// addDocumentsToRecordSet adds documents to the record set
-func addDocumentsToRecordSet(ctx context.Context,
-	recordSet *types.RecordSet,
-	docs []string,
-	metadata constants.Metadata) (*types.RecordSet, error) {
+// internal/chromaclient/chroma_recordset.go
+func (rs *ChromagoRecordSet) AddTextToRecordSet(ctx context.Context, documents []string,
+	metadata map[string]any) (*types.RecordSet, error) {
 
-	recordSet, err := AddTextToRecordSet(ctx, recordSet, docs, metadata)
-	if err != nil {
-		log.Debug().Msgf("Error adding to record set: %v\n", err)
-		return nil, err
+	// Iterate over documents and metadata list and add records to the record set
+	for _, doc := range documents {
+		rs.WithRecord(
+			types.WithDocument(doc),
+			// types.WithMetadatas(metadata),
+		)
 	}
-	return recordSet, nil
-}
 
-// validateRecordSet validates the record set
-func validateRecordSet(ctx context.Context, recordSet *types.RecordSet) error {
-	_, err := recordSet.BuildAndValidate(ctx)
-	if err != nil {
-		log.Debug().Msgf("Error building and validating records: %v\n", err)
-		return err
-	}
-	return nil
-}
-
-// addRecordsToCollection adds records to the collection
-func addRecordsToCollection(ctx context.Context,
-	collection *ChromagoCollection,
-	recordSet *types.RecordSet) (*chromago.Collection, error) {
-
-	c, err := collection.AddRecords(ctx, recordSet)
-	if err != nil {
-		log.Err(err).Msg("Error adding records to collection")
-		return nil, err
-	}
-	return c, nil
+	return rs.RecordSet, nil
 }
 
 // AddPdfToRecordSet adds pdf documents to the record set
@@ -114,23 +101,6 @@ func AddPdfToRecordSet(ctx context.Context,
 		rs.WithRecord(
 			types.WithDocument(doc),
 			types.WithMetadata(key, metadataValue),
-		)
-	}
-
-	return rs, nil
-}
-
-// internal/chromaclient/chroma_recordset.go
-func AddTextToRecordSet(ctx context.Context,
-	rs *types.RecordSet,
-	documents []string,
-	metadata map[string]any) (*types.RecordSet, error) {
-
-	// Iterate over documents and metadata list and add records to the record set
-	for _, doc := range documents {
-		rs.WithRecord(
-			types.WithDocument(doc),
-			// types.WithMetadatas(metadata),
 		)
 	}
 

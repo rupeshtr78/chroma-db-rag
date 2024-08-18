@@ -19,7 +19,7 @@ type Collection interface {
 	QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error)
 	EmbeddingFunction() EmbeddingFunc
 	AddRecords(ctx context.Context, recordSet *types.RecordSet) (*chromago.Collection, error)
-	AddRecordSetToCollection(ctx context.Context, recordSet *types.RecordSet, docs []string, metadata constants.Metadata) (*chromago.Collection, error)
+	AddRecordSetToCollection(ctx context.Context, recordSet *ChromagoRecordSet, docs []string, metadata constants.Metadata) (*chromago.Collection, error)
 }
 
 type ChromagoCollection struct {

@@ -6,7 +6,6 @@ import (
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
-	"github.com/amikos-tech/chroma-go/types"
 	"github.com/rs/zerolog/log"
 )
 
@@ -66,7 +65,7 @@ func WithEmbeddingModel(model string) Option {
 }
 
 // VectorEmbedData embeds the data in the collection
-func VectorEmbedData(ctx context.Context, c vectordb.Collection, recordSet *types.RecordSet, options ...Option) (*chromago.Collection, error) {
+func VectorEmbedData(ctx context.Context, c vectordb.Collection, recordSet *vectordb.ChromagoRecordSet, options ...Option) (*chromago.Collection, error) {
 	// Default options
 	opts := &ollamaRagOptions{
 		ChromaURL:      constants.ChromaUrl,
