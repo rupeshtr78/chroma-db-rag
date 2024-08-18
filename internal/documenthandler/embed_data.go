@@ -1,8 +1,8 @@
 package documenthandler
 
 import (
-	"chroma-db/internal/chromaclient"
 	"chroma-db/internal/constants"
+	"chroma-db/internal/vectordb"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
@@ -65,7 +65,7 @@ func WithEmbeddingModel(model string) Option {
 }
 
 // VectorEmbedData embeds the data in the collection
-func VectorEmbedData(ctx context.Context, client *chromaclient.ChromaClient, options ...Option) (*chromago.Collection, error) {
+func VectorEmbedData(ctx context.Context, c vectordb.Collection, recordSet *vectordb.ChromagoRecordSet, options ...Option) (*chromago.Collection, error) {
 	// Default options
 	opts := &ollamaRagOptions{
 		ChromaURL:      constants.ChromaUrl,
@@ -81,11 +81,11 @@ func VectorEmbedData(ctx context.Context, client *chromaclient.ChromaClient, opt
 		option(opts)
 	}
 
-	collection, recordSet, err := chromaclient.CreateCollectionAndRecordSet(ctx, client, constants.HuggingFace, opts.EmbeddingModel)
-	if err != nil {
-		log.Debug().Msgf("Error creating collection and recordset: %v\n", err)
-		return nil, err
-	}
+	// collection, recordSet, err := vectordb.CreateCollectionAndRecordSet(ctx, client, constants.HuggingFace, opts.EmbeddingModel)
+	// if err != nil {
+	// 	log.Debug().Msgf("Error creating collection and recordset: %v\n", err)
+	// 	return nil, err
+	// }
 
 	docLoader := NewDocumentLoader(opts.DocType)
 
@@ -98,7 +98,7 @@ func VectorEmbedData(ctx context.Context, client *chromaclient.ChromaClient, opt
 	}
 
 	// Add the record set to the collection
-	collection, err = AddRecordSetToCollection(ctx, collection, recordSet, docs, metadata)
+	collection, err := c.AddRecordSetToCollection(ctx, recordSet, docs, metadata)
 	if err != nil {
 		log.Debug().Msgf("Error adding record set to collection: %v\n", err)
 		return nil, err

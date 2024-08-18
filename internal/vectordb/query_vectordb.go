@@ -1,35 +1,14 @@
-package vectordbquery
+package vectordb
 
 import (
-	"chroma-db/pkg/logger"
 	"context"
 
 	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/amikos-tech/chroma-go/types"
+	"github.com/rs/zerolog/log"
 )
 
-var log = logger.Log
-
-// EmbeddingFunc interface depedency injection for embedding documents
-type EmbeddingFunc interface {
-	EmbedDocuments(ctx context.Context, docs []string) ([]*types.Embedding, error)
-}
-
-// Collection interface allows dependency injection for the collection
-type Collection interface {
-	QueryWithOptions(ctx context.Context, options ...types.CollectionQueryOption) (*chromago.QueryResults, error)
-	EmbeddingFunction() EmbeddingFunc
-}
-
-type ChromagoCollection struct {
-	*chromago.Collection
-}
-
-func (ccc *ChromagoCollection) EmbeddingFunction() EmbeddingFunc {
-	return ccc.Collection.EmbeddingFunction
-}
-
-// EmbedQuery embeds the query text and returns the embedding or an error
+// EmbedQuery embeds the query text and returns the embedding or an error //TODO: fix payload too large error
 func EmbedQuery(ctx context.Context, embeddingFunc EmbeddingFunc, query []string) ([]*types.Embedding, error) {
 	embedding, err := embeddingFunc.EmbedDocuments(ctx, query)
 	if err != nil {
@@ -84,13 +63,3 @@ func QueryVectorDbWithOptions(ctx context.Context, collection Collection, queryT
 	// queryResults := qr.Documents[0][index]
 	return qr, nil
 }
-
-// type CollectionQuery struct {
-// 	QueryTexts    []string
-// 	Where         map[string]interface{}
-// 	WhereDocument map[string]interface{}
-// 	NResults      int32
-// 	Offset        int32
-// 	Limit         int32
-// 	Ids           []string
-// }

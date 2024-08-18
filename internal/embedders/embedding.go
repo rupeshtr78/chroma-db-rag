@@ -3,7 +3,6 @@ package embedders
 import (
 	"chroma-db/internal/constants"
 	"chroma-db/pkg/logger"
-	"log"
 	"os"
 
 	huggingface "github.com/amikos-tech/chroma-go/hf"
@@ -11,6 +10,8 @@ import (
 	ollamaEmbedder "github.com/amikos-tech/chroma-go/pkg/embeddings/ollama"
 	"github.com/amikos-tech/chroma-go/types"
 )
+
+var log = logger.Log
 
 type EmbeddingManager interface {
 	GetEmbeddingFunction() (types.EmbeddingFunction, error)
@@ -37,6 +38,19 @@ func NewEmbeddingManager(embedder constants.Embedder, baseurl string, model stri
 	default:
 		return nil
 	}
+}
+
+func CreateEmbeddingFunction(embedder constants.Embedder, embeddingModel string) (types.EmbeddingFunction, error) {
+	// Get Embedding either HuggingFace or Ollama
+	em := NewEmbeddingManager(embedder, constants.HuggingFaceTeiUrl, embeddingModel)
+
+	hfef, err := em.GetEmbeddingFunction()
+	if err != nil {
+		log.Debug().Msgf("Error getting hugging face embedding function: %v\n", err)
+		return nil, err
+	}
+
+	return hfef, nil
 }
 
 type HuggingFaceEmbedder struct {
@@ -82,7 +96,7 @@ func (o *OpenAiEmbedder) GetEmbeddingFunction() (types.EmbeddingFunction, error)
 	openaiEf, err := openai.NewOpenAIEmbeddingFunction(o.ApiKey,
 		openai.WithModel(openai.EmbeddingModel(o.Model)))
 	if err != nil {
-		log.Default().Printf("Error creating embedding function: %s \n", err)
+		log.Error().Msgf("Error creating embedding function: %s \n", err)
 		return nil, err
 	}
 

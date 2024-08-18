@@ -1,6 +1,7 @@
-package vectordbquery
+package vectordb
 
 import (
+	"chroma-db/internal/constants"
 	"context"
 	"errors"
 	"testing"
@@ -21,6 +22,16 @@ func (m *MockEmbeddingFunc) EmbedDocuments(ctx context.Context, docs []string) (
 	return args.Get(0).([]*types.Embedding), args.Error(1)
 }
 
+func (m *MockEmbeddingFunc) EmbedQuery(context.Context, string) (*types.Embedding, error) {
+	args := m.Called()
+	return args.Get(0).(*types.Embedding), args.Error(1)
+}
+
+func (m *MockEmbeddingFunc) EmbedRecords(ctx context.Context, records []*types.Record, force bool) error {
+	args := m.Called(ctx, records, force)
+	return args.Error(0)
+}
+
 type MockCollection struct {
 	mock.Mock
 }
@@ -33,6 +44,16 @@ func (m *MockCollection) QueryWithOptions(ctx context.Context, options ...types.
 func (m *MockCollection) EmbeddingFunction() EmbeddingFunc {
 	args := m.Called()
 	return args.Get(0).(EmbeddingFunc)
+}
+
+func (m *MockCollection) AddRecords(ctx context.Context, recordSet *types.RecordSet) (*chromago.Collection, error) {
+	args := m.Called(ctx, recordSet)
+	return args.Get(0).(*chromago.Collection), args.Error(1)
+}
+
+func (m *MockCollection) AddRecordSetToCollection(ctx context.Context, recordSet *ChromagoRecordSet, docs []string, metadata constants.Metadata) (*chromago.Collection, error) {
+	args := m.Called(ctx, recordSet, docs, metadata)
+	return args.Get(0).(*chromago.Collection), args.Error(1)
 }
 
 func TestEmbedQuery(t *testing.T) {
