@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// EmbedQuery embeds the query text and returns the embedding or an error
+// EmbedQuery embeds the query text and returns the embedding or an error //TODO: fix payload too large error
 func EmbedQuery(ctx context.Context, embeddingFunc EmbeddingFunc, query []string) ([]*types.Embedding, error) {
 	embedding, err := embeddingFunc.EmbedDocuments(ctx, query)
 	if err != nil {

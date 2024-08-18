@@ -44,15 +44,3 @@ func (c *ChromagoCollection) QueryWithOptions(ctx context.Context, options ...ty
 	qr, err := c.Collection.QueryWithOptions(ctx, options...)
 	return qr, err
 }
-
-type RecordSet interface {
-	WithRecord(recordOpts ...types.Option) *types.RecordSet
-}
-
-type RecordSetWrapper struct {
-	RecordSet *types.RecordSet
-}
-
-func (rsw *RecordSetWrapper) WithRecord(recordOpts ...types.Option) *types.RecordSet {
-	return rsw.RecordSet.WithRecord(recordOpts...)
-}
