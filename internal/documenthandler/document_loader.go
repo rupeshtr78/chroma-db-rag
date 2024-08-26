@@ -14,7 +14,7 @@ import (
 )
 
 type DocumentLoader interface {
-	LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error)
+	LoadDocument(context.Context, string) ([]string, constants.Metadata, error)
 }
 
 // Implementing the file reader interface for real file operations
