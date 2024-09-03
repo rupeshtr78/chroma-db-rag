@@ -5,3 +5,4 @@ vendor/
 chromadb/
 chromadb/*
 chromadb/chroma.sqlite3
+.aider*

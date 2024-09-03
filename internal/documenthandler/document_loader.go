@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/ledongthuc/pdf"
 	"github.com/rs/zerolog/log"
@@ -54,9 +55,15 @@ func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]strin
 	loader := documentloaders.NewText(f)
 	// docs, err := loader.Load(ctx)
 
+	// implement LenFunc
+	lenfunc := func(s string) int {
+		return utf8.RuneCountInString(s)
+	}
+
 	splitter := textsplitter.NewRecursiveCharacter(
-		textsplitter.WithChunkSize(1024),
+		textsplitter.WithChunkSize(4096),
 		textsplitter.WithChunkOverlap(512),
+		textsplitter.WithLenFunc(lenfunc),
 	)
 	docs, err := loader.LoadAndSplit(ctx, splitter)
 
