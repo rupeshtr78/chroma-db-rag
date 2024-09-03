@@ -98,11 +98,20 @@ func VectorEmbedData(ctx context.Context, c vectordb.Collection, recordSet *vect
 	}
 
 	// Add the record set to the collection
-	collection, err := c.AddRecordSetToCollection(ctx, recordSet, docs, metadata)
-	if err != nil {
-		log.Debug().Msgf("Error adding record set to collection: %v\n", err)
-		return nil, err
+	var collection *chromago.Collection
+	for _, doc := range docs {
+		collection, err = c.AddRecordSetToCollection(ctx, recordSet, doc, metadata)
+		if err != nil {
+			log.Debug().Msgf("Error adding record set to collection: %v\n", err)
+			return nil, err
+		}
+
 	}
+	// collection, err := c.AddRecordSetToCollection(ctx, recordSet, docs, metadata)
+	// if err != nil {
+	// 	log.Debug().Msgf("Error adding record set to collection: %v\n", err)
+	// 	return nil, err
+	// }
 
 	// Count the number of documents in the collection
 	countDocs, qrerr := collection.Count(ctx)

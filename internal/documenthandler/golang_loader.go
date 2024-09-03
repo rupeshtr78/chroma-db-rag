@@ -18,12 +18,12 @@ import (
 type GoLangLoader struct{}
 
 // LoadDocument goes through all directories and loads all Go files along with metadata
-func (t *GoLangLoader) LoadDocument(ctx context.Context, rootDir string) ([]string, map[string]constants.Metadata, error) {
+func (t *GoLangLoader) LoadDocument(ctx context.Context, rootDir string) (map[string][]string, map[string]constants.Metadata, error) {
 	if rootDir == "" {
 		return nil, nil, fmt.Errorf("GoLangLoader: Root directory path is empty")
 	}
 
-	allFiles := make([]string, 0)
+	allFiles := make(map[string][]string, 0)
 	allMetadata := make(map[string]constants.Metadata)
 
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
@@ -41,10 +41,15 @@ func (t *GoLangLoader) LoadDocument(ctx context.Context, rootDir string) ([]stri
 				return err
 			}
 
-			allFiles = append(allFiles, strSlice...)
+			packageName, ok := metadata["package"]
+			if !ok {
+				packageName = "unknown"
+			}
+
+			allFiles[path] = strSlice
 			allMetadata[path] = metadata
 
-			log.Debug().Msgf("GoLangLoader: Loaded Go code from %s, package: %s", path, metadata["package"])
+			log.Debug().Msgf("GoLangLoader: Loaded Go code from %s, package: %s", path, packageName)
 		}
 
 		return nil
@@ -84,7 +89,7 @@ func (t *GoLangLoader) processGoFile(filePath string) ([]string, constants.Metad
 		}
 	}
 
-	metadata["filename"] = filePath
+	metadata["filename"] = filepath.Base(filePath)
 	metadata["filesize"] = fmt.Sprintf("%d bytes", getFileSize(filePath))
 
 	log.Debug().Msgf("GoLangLoader: Loaded Go file from %s with package %s", filePath, node.Name.Name)

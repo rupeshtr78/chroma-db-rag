@@ -15,7 +15,7 @@ import (
 )
 
 type DocumentLoader interface {
-	LoadDocument(context.Context, string) ([]string, constants.Metadata, error)
+	LoadDocument(ctx context.Context, filePath string) (map[string][]string, constants.Metadata, error)
 }
 
 // Implementing the file reader interface for real file operations
@@ -42,7 +42,7 @@ type TextLoader struct {
 }
 
 // LoadDocument loads the text data from the given file path
-func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
+func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) (map[string][]string, constants.Metadata, error) {
 	if filePath == "" {
 		return nil, nil, fmt.Errorf("TextLoaderV2: File path is empty")
 	}
@@ -61,8 +61,8 @@ func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]strin
 	}
 
 	splitter := textsplitter.NewRecursiveCharacter(
-		textsplitter.WithChunkSize(4096),
-		textsplitter.WithChunkOverlap(512),
+		textsplitter.WithChunkSize(1024),
+		textsplitter.WithChunkOverlap(256),
 		textsplitter.WithLenFunc(lenfunc),
 	)
 	docs, err := loader.LoadAndSplit(ctx, splitter)
@@ -71,35 +71,38 @@ func (t *TextLoader) LoadDocument(ctx context.Context, filePath string) ([]strin
 		return nil, nil, err
 	}
 
-	// returning a slice of strings and a Metadata map
-	strSlice := make([]string, 0)
-	metadata := make(constants.Metadata)
+	// returning a map of strings and a Metadata map
+	allFiles := make(map[string][]string)
+	allMetadata := constants.NewMetadata()
 	for _, doc := range docs {
-		strSlice = append(strSlice, doc.PageContent)
+		allFiles[filePath] = append(allFiles[filePath], doc.PageContent)
 		if doc.Metadata == nil {
 			continue
 		}
+		if allMetadata[filePath] == nil {
+			allMetadata[filePath] = make(constants.Metadata)
+		}
 		for k, v := range doc.Metadata {
 			log.Debug().Msgf("TextLoaderV2: Metadata: %s: %s", k, v)
-			metadata[k] = v
+			allMetadata[filePath] = v
 		}
 	}
 
 	log.Debug().Msgf("TextLoader: Loading loaded text data from %s", filePath)
-	log.Debug().Msgf("TextLoader: Metadata: %v", metadata)
+	log.Debug().Msgf("TextLoader: Metadata: %v", allMetadata[filePath])
 
-	return strSlice, metadata, nil
+	return allFiles, allMetadata, nil
 }
 
 type PdfLoader struct{}
 
 // LoadDocument loads the text data from the given pdf file path / TODO - add metadata fix issues with split
-func (p *PdfLoader) LoadDocument(ctx context.Context, filePath string) ([]string, constants.Metadata, error) {
+func (p *PdfLoader) LoadDocument(ctx context.Context, filePath string) (map[string][]string, constants.Metadata, error) {
 	if filePath == "" {
 		return nil, nil, fmt.Errorf("TextLoaderV2: File path is empty")
 	}
-	pdfStrings := []string{}
-	metadata := constants.Metadata{}
+	allFiles := make(map[string][]string)
+	allMetadata := constants.NewMetadata()
 
 	file, pdfReader, err := pdf.Open(filePath)
 	if err != nil {
@@ -120,13 +123,11 @@ func (p *PdfLoader) LoadDocument(ctx context.Context, filePath string) ([]string
 		if err != nil {
 			return nil, nil, err
 		}
-		pdfStrings = append(pdfStrings, text)
-		metadata[fmt.Sprintf("%d", pageNum)] = fileName
-
+		allFiles[filePath] = append(allFiles[filePath], text)
+		allMetadata[filePath] = fileName
 	}
 
-	log.Debug().Msgf("PDF List Length: %v", len(pdfStrings))
-	log.Debug().Msgf("Metadata Length: %v", len(metadata))
+	log.Debug().Msgf("PDF List Length: %v", len(allFiles[filePath]))
 
-	return pdfStrings, metadata, nil
+	return allFiles, allMetadata, nil
 }

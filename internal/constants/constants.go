@@ -33,6 +33,10 @@ var (
 
 type Metadata map[string]interface{}
 
+func NewMetadata() Metadata {
+	return make(Metadata)
+}
+
 type DocType string
 
 // Supported Document types
