@@ -6,3 +6,4 @@
 - [ ] Overall Refactoring and cleanup
 - [ ] Go routine for reranker
 - [ ] Use Grpc for reranker
+- [ ] Issue with large files, Embedding too low (100k lines crashed )
